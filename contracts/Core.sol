@@ -4,11 +4,11 @@ pragma solidity 0.8.19;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Rig} from "./Rig.sol";
-import {Unit} from "./Unit.sol";
-import {UnitFactory} from "./UnitFactory.sol";
-import {RigFactory} from "./RigFactory.sol";
-import {AuctionFactory} from "./AuctionFactory.sol";
+import {IRig} from "./interfaces/IRig.sol";
+import {IUnit} from "./interfaces/IUnit.sol";
+import {IUnitFactory} from "./interfaces/IUnitFactory.sol";
+import {IRigFactory} from "./interfaces/IRigFactory.sol";
+import {IAuctionFactory} from "./interfaces/IAuctionFactory.sol";
 import {IUniswapV2Factory, IUniswapV2Router} from "./interfaces/IUniswapV2.sol";
 
 /**
@@ -63,6 +63,7 @@ contract Core is Ownable {
         address launcher; // address to receive Rig ownership
         string tokenName; // Unit token name
         string tokenSymbol; // Unit token symbol
+        string unitUri; // metadata URI for the unit token
         uint256 donutAmount; // DONUT to provide for LP
         address teamAddress; // team fee recipient
         uint256 initialUps; // starting units per second
@@ -172,10 +173,10 @@ contract Core is Ownable {
         IERC20(donutToken).safeTransferFrom(msg.sender, address(this), params.donutAmount);
 
         // Deploy Unit token via factory (Core becomes initial rig/minter)
-        address unitToken = UnitFactory(unitFactory).deploy(params.tokenName, params.tokenSymbol);
+        address unitToken = IUnitFactory(unitFactory).deploy(params.tokenName, params.tokenSymbol);
 
         // Mint initial Unit tokens for LP seeding
-        Unit(unitToken).mint(address(this), initialUnitMintAmount);
+        IUnit(unitToken).mint(address(this), initialUnitMintAmount);
 
         // Create Unit/DONUT LP via Uniswap V2
         IERC20(unitToken).approve(uniswapV2Router, initialUnitMintAmount);
@@ -197,7 +198,7 @@ contract Core is Ownable {
         IERC20(lpToken).safeTransfer(DEAD_ADDRESS, liquidity);
 
         // Deploy Auction with LP as payment token
-        auction = AuctionFactory(auctionFactory).deploy(
+        auction = IAuctionFactory(auctionFactory).deploy(
             params.auctionInitPrice,
             lpToken,
             DEAD_ADDRESS,
@@ -207,22 +208,26 @@ contract Core is Ownable {
         );
 
         // Deploy Rig via factory
-        Rig.RigParams memory rigParams = Rig.RigParams({
-            initialUps: params.initialUps,
-            tailUps: params.tailUps,
-            halvingPeriod: params.halvingPeriod,
-            epochPeriod: params.rigEpochPeriod,
-            priceMultiplier: params.rigPriceMultiplier,
-            minInitPrice: params.rigMinInitPrice
-        });
-
-        rig = RigFactory(rigFactory).deploy(unitToken, weth, auction, params.teamAddress, address(this), rigParams);
+        rig = IRigFactory(rigFactory).deploy(
+            unitToken,
+            weth,
+            auction,
+            params.teamAddress,
+            address(this),
+            params.unitUri,
+            params.initialUps,
+            params.tailUps,
+            params.halvingPeriod,
+            params.rigEpochPeriod,
+            params.rigPriceMultiplier,
+            params.rigMinInitPrice
+        );
 
         // Transfer Unit minting rights to Rig (permanently locked since Rig has no setRig function)
-        Unit(unitToken).setRig(rig);
+        IUnit(unitToken).setRig(rig);
 
         // Transfer Rig ownership to launcher
-        Rig(rig).transferOwnership(params.launcher);
+        IRig(rig).transferOwnership(params.launcher);
 
         // Update registry
         deployedRigs.push(rig);

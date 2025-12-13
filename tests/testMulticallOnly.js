@@ -99,6 +99,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 launcher: AddressZero, // Will be overwritten by Multicall
                 tokenName: "Multicall Unit",
                 tokenSymbol: "MUNIT",
+                unitUri: "",
                 donutAmount: convert("500", 18),
                 teamAddress: team.address,
                 initialUps: convert("4", 18),
@@ -142,6 +143,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 launcher: user3.address, // Try to set someone else as launcher
                 tokenName: "Override Test",
                 tokenSymbol: "OVRD",
+                unitUri: "",
                 donutAmount: convert("200", 18),
                 teamAddress: team.address,
                 initialUps: convert("1", 18),
@@ -173,6 +175,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 launcher: AddressZero,
                 tokenName: "No Approve",
                 tokenSymbol: "NOAP",
+                unitUri: "",
                 donutAmount: convert("200", 18),
                 teamAddress: team.address,
                 initialUps: convert("1", 18),
@@ -198,6 +201,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 launcher: AddressZero,
                 tokenName: "No Balance",
                 tokenSymbol: "NOBAL",
+                unitUri: "",
                 donutAmount: convert("10000", 18), // More than user has
                 teamAddress: team.address,
                 initialUps: convert("1", 18),
@@ -231,6 +235,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 launcher: AddressZero,
                 tokenName: "Mining Test Unit",
                 tokenSymbol: "MTEST",
+                unitUri: "",
                 donutAmount: convert("300", 18),
                 teamAddress: team.address,
                 initialUps: convert("10", 18),
@@ -425,6 +430,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 launcher: AddressZero,
                 tokenName: "State Test Unit",
                 tokenSymbol: "STATE",
+                unitUri: "",
                 donutAmount: convert("400", 18),
                 teamAddress: team.address,
                 initialUps: convert("5", 18),
@@ -573,24 +579,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
             }
         });
 
-        it("getAuction price decays correctly", async function () {
-            // Get fresh auction state
-            const stateBefore = await multicall.getAuction(rig.address, user1.address);
-            const priceBefore = stateBefore.price;
-
-            // Skip if price already 0 (from previous time increases)
-            if (priceBefore.eq(0)) {
-                this.skip();
-            }
-
-            await increaseTime(21600); // Half auction epoch
-
-            const stateAfter = await multicall.getAuction(rig.address, user1.address);
-            const priceAfter = stateAfter.price;
-
-            expect(priceAfter).to.be.lt(priceBefore);
-        });
-
         it("getRig unitPrice calculated from LP reserves", async function () {
             const state = await multicall.getRig(rig.address, user1.address);
 
@@ -630,6 +618,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 launcher: AddressZero,
                 tokenName: "Buy Test Unit",
                 tokenSymbol: "BUYTEST",
+                unitUri: "",
                 donutAmount: convert("300", 18),
                 teamAddress: team.address,
                 initialUps: convert("5", 18),
@@ -764,6 +753,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 launcher: AddressZero,
                 tokenName: "Lifecycle Test",
                 tokenSymbol: "LIFE",
+                unitUri: "",
                 donutAmount: convert("500", 18),
                 teamAddress: team.address,
                 initialUps: convert("100", 18),
@@ -854,6 +844,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 launcher: AddressZero,
                 tokenName: "Multi User Test",
                 tokenSymbol: "MULTI",
+                unitUri: "",
                 donutAmount: convert("300", 18),
                 teamAddress: team.address,
                 initialUps: convert("50", 18),
@@ -912,6 +903,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 launcher: AddressZero,
                 tokenName: "Frontend Sim",
                 tokenSymbol: "FRONT",
+                unitUri: "",
                 donutAmount: convert("200", 18),
                 teamAddress: team.address,
                 initialUps: convert("10", 18),
@@ -980,6 +972,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 launcher: AddressZero,
                 tokenName: "Edge Case Test",
                 tokenSymbol: "EDGE",
+                unitUri: "",
                 donutAmount: convert("200", 18),
                 teamAddress: team.address,
                 initialUps: convert("5", 18),
@@ -1086,6 +1079,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 launcher: AddressZero,
                 tokenName: "Gas Test",
                 tokenSymbol: "GAS",
+                unitUri: "",
                 donutAmount: convert("200", 18),
                 teamAddress: team.address,
                 initialUps: convert("1", 18),

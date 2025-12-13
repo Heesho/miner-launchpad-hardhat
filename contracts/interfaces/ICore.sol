@@ -6,6 +6,26 @@ pragma solidity 0.8.19;
  * @notice Interface for the Core launchpad contract.
  */
 interface ICore {
+    struct LaunchParams {
+        address launcher;
+        string tokenName;
+        string tokenSymbol;
+        string unitUri;
+        uint256 donutAmount;
+        address teamAddress;
+        uint256 initialUps;
+        uint256 tailUps;
+        uint256 halvingPeriod;
+        uint256 rigEpochPeriod;
+        uint256 rigPriceMultiplier;
+        uint256 rigMinInitPrice;
+        uint256 auctionInitPrice;
+        uint256 auctionEpochPeriod;
+        uint256 auctionPriceMultiplier;
+        uint256 auctionMinInitPrice;
+    }
+
+    function launch(LaunchParams calldata params) external returns (address rig, address auction, address lpToken);
     function protocolFeeAddress() external view returns (address);
     function donutToken() external view returns (address);
     function uniswapV2Factory() external view returns (address);

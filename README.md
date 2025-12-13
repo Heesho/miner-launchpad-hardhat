@@ -147,6 +147,7 @@ The 15% treasury fee accumulates and is auctioned to LP holders via Dutch auctio
 |-----------|-------------|---------|
 | `tokenName` | Token display name | "My Token" |
 | `tokenSymbol` | Ticker symbol | "MTK" |
+| `unitUri` | Metadata URI (logo, etc.) | "ipfs://Qm..." |
 | `donutAmount` | DONUT for liquidity | 1000 |
 | `initialUps` | Starting emission rate | 4 tokens/sec |
 | `tailUps` | Minimum emission rate | 0.01 tokens/sec |
@@ -162,6 +163,7 @@ The 15% treasury fee accumulates and is auctioned to LP holders via Dutch auctio
 ### After Launch
 
 As the launcher, you own the Rig contract and can:
+- Update unit metadata URI
 - Change team address
 - Change treasury address
 - Transfer ownership
@@ -369,6 +371,7 @@ const params = {
   launcher: userAddress,
   tokenName: "My Token",
   tokenSymbol: "MTK",
+  unitUri: "ipfs://QmYourMetadataHash",
   donutAmount: ethers.utils.parseEther("1000"),
   teamAddress: teamAddress,
   initialUps: ethers.utils.parseEther("4"),

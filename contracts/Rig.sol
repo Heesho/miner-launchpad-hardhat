@@ -5,11 +5,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import {Unit} from "./Unit.sol";
-
-interface ICore {
-    function protocolFeeAddress() external view returns (address);
-}
+import {IUnit} from "./interfaces/IUnit.sol";
+import {ICore} from "./interfaces/ICore.sol";
 
 /**
  * @title Rig
@@ -58,7 +55,8 @@ contract Rig is Ownable, ReentrancyGuard {
     address public treasury; // treasury fee recipient
     address public team; // team fee recipient
 
-    string public uri; // metadata URI for current rig
+    string public uri; // metadata URI set by current miner
+    string public unitUri; // metadata URI for the unit token (set by owner)
 
     /*----------  ERRORS  -----------------------------------------------*/
 
@@ -79,17 +77,7 @@ contract Rig is Ownable, ReentrancyGuard {
     event Rig__ProtocolFee(address indexed protocol, uint256 amount);
     event Rig__TreasurySet(address indexed treasury);
     event Rig__TeamSet(address indexed team);
-
-    /*----------  STRUCTS  ----------------------------------------------*/
-
-    struct RigParams {
-        uint256 initialUps;
-        uint256 tailUps;
-        uint256 halvingPeriod;
-        uint256 epochPeriod;
-        uint256 priceMultiplier;
-        uint256 minInitPrice;
-    }
+    event Rig__UnitUriSet(string uri);
 
     /*----------  CONSTRUCTOR  ------------------------------------------*/
 
@@ -100,7 +88,13 @@ contract Rig is Ownable, ReentrancyGuard {
      * @param _treasury Initial treasury address for fee collection
      * @param _team Team address for fee collection
      * @param _core Core contract address for protocol fee lookups
-     * @param params Struct containing emission and auction parameters
+     * @param _unitUri Metadata URI for the unit token
+     * @param _initialUps Starting units per second emission rate
+     * @param _tailUps Minimum units per second after halvings
+     * @param _halvingPeriod Time between emission halvings
+     * @param _epochPeriod Duration of each Dutch auction epoch
+     * @param _priceMultiplier Multiplier for next epoch's starting price
+     * @param _minInitPrice Minimum starting price per epoch
      */
     constructor(
         address _unit,
@@ -108,29 +102,36 @@ contract Rig is Ownable, ReentrancyGuard {
         address _treasury,
         address _team,
         address _core,
-        RigParams memory params
+        string memory _unitUri,
+        uint256 _initialUps,
+        uint256 _tailUps,
+        uint256 _halvingPeriod,
+        uint256 _epochPeriod,
+        uint256 _priceMultiplier,
+        uint256 _minInitPrice
     ) {
         if (_treasury == address(0)) revert Rig__InvalidTreasury();
-        if (params.minInitPrice < ABS_MIN_INIT_PRICE) revert Rig__MinInitPriceBelowAbsoluteMin();
+        if (_minInitPrice < ABS_MIN_INIT_PRICE) revert Rig__MinInitPriceBelowAbsoluteMin();
 
         unit = _unit;
         quote = _quote;
         treasury = _treasury;
         team = _team;
         core = _core;
+        unitUri = _unitUri;
         startTime = block.timestamp;
 
-        initialUps = params.initialUps;
-        tailUps = params.tailUps;
-        halvingPeriod = params.halvingPeriod;
-        epochPeriod = params.epochPeriod;
-        priceMultiplier = params.priceMultiplier;
-        minInitPrice = params.minInitPrice;
+        initialUps = _initialUps;
+        tailUps = _tailUps;
+        halvingPeriod = _halvingPeriod;
+        epochPeriod = _epochPeriod;
+        priceMultiplier = _priceMultiplier;
+        minInitPrice = _minInitPrice;
 
-        initPrice = params.minInitPrice;
+        initPrice = _minInitPrice;
         epochStartTime = block.timestamp;
         miner = _treasury;
-        ups = params.initialUps;
+        ups = _initialUps;
     }
 
     /*----------  EXTERNAL FUNCTIONS  -----------------------------------*/
@@ -201,7 +202,7 @@ contract Rig is Ownable, ReentrancyGuard {
         uint256 mineTime = block.timestamp - epochStartTime;
         uint256 minedAmount = mineTime * ups;
 
-        Unit(unit).mint(miner, minedAmount);
+        IUnit(unit).mint(miner, minedAmount);
         emit Rig__Minted(miner, minedAmount);
 
         // Update state for new epoch
@@ -239,6 +240,16 @@ contract Rig is Ownable, ReentrancyGuard {
     function setTeam(address _team) external onlyOwner {
         team = _team;
         emit Rig__TeamSet(_team);
+    }
+
+    /**
+     * @notice Update the unit metadata URI.
+     * @dev Used to set metadata like the unit logo image.
+     * @param _unitUri New metadata URI
+     */
+    function setUnitUri(string memory _unitUri) external onlyOwner {
+        unitUri = _unitUri;
+        emit Rig__UnitUriSet(_unitUri);
     }
 
     /*----------  VIEW FUNCTIONS  ---------------------------------------*/
@@ -289,5 +300,9 @@ contract Rig is Ownable, ReentrancyGuard {
 
     function getUri() external view returns (string memory) {
         return uri;
+    }
+
+    function getUnitUri() external view returns (string memory) {
+        return unitUri;
     }
 }

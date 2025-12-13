@@ -3,9 +3,8 @@ pragma solidity 0.8.19;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {Rig} from "./Rig.sol";
-import {Auction} from "./Auction.sol";
-import {Core} from "./Core.sol";
+import {IRig} from "./interfaces/IRig.sol";
+import {IAuction} from "./interfaces/IAuction.sol";
 import {ICore} from "./interfaces/ICore.sol";
 
 interface IWETH {
@@ -42,7 +41,8 @@ contract Multicall {
         uint256 nextUps; // calculated current ups
         uint256 unitPrice; // Unit token price in DONUT
         address miner; // current miner
-        string uri; // metadata URI
+        string uri; // metadata URI set by miner
+        string unitUri; // metadata URI for the unit token (set by owner)
         uint256 ethBalance; // user's ETH balance
         uint256 wethBalance; // user's WETH balance
         uint256 donutBalance; // user's DONUT balance
@@ -97,7 +97,7 @@ contract Multicall {
         IWETH(weth).deposit{value: msg.value}();
         IERC20(weth).safeApprove(rig, 0);
         IERC20(weth).safeApprove(rig, msg.value);
-        Rig(rig).mine(msg.sender, epochId, deadline, maxPrice, uri);
+        IRig(rig).mine(msg.sender, epochId, deadline, maxPrice, uri);
 
         // Refund unused WETH
         uint256 wethBalance = IERC20(weth).balanceOf(address(this));
@@ -116,15 +116,15 @@ contract Multicall {
      */
     function buy(address rig, uint256 epochId, uint256 deadline, uint256 maxPaymentTokenAmount) external {
         address auction = ICore(core).rigToAuction(rig);
-        address paymentToken = Auction(auction).paymentToken();
-        uint256 price = Auction(auction).getPrice();
+        address paymentToken = IAuction(auction).paymentToken();
+        uint256 price = IAuction(auction).getPrice();
         address[] memory assets = new address[](1);
         assets[0] = weth;
 
         IERC20(paymentToken).safeTransferFrom(msg.sender, address(this), price);
         IERC20(paymentToken).safeApprove(auction, 0);
         IERC20(paymentToken).safeApprove(auction, price);
-        Auction(auction).buy(assets, msg.sender, epochId, deadline, maxPaymentTokenAmount);
+        IAuction(auction).buy(assets, msg.sender, epochId, deadline, maxPaymentTokenAmount);
     }
 
     /**
@@ -135,7 +135,7 @@ contract Multicall {
      * @return auction Address of deployed Auction contract
      * @return lpToken Address of Unit/DONUT LP token
      */
-    function launch(Core.LaunchParams calldata params)
+    function launch(ICore.LaunchParams calldata params)
         external
         returns (address rig, address auction, address lpToken)
     {
@@ -145,10 +145,11 @@ contract Multicall {
         IERC20(donut).safeApprove(core, params.donutAmount);
 
         // Build params with msg.sender as launcher
-        Core.LaunchParams memory launchParams = Core.LaunchParams({
+        ICore.LaunchParams memory launchParams = ICore.LaunchParams({
             launcher: msg.sender,
             tokenName: params.tokenName,
             tokenSymbol: params.tokenSymbol,
+            unitUri: params.unitUri,
             donutAmount: params.donutAmount,
             teamAddress: params.teamAddress,
             initialUps: params.initialUps,
@@ -163,7 +164,7 @@ contract Multicall {
             auctionMinInitPrice: params.auctionMinInitPrice
         });
 
-        return Core(core).launch(launchParams);
+        return ICore(core).launch(launchParams);
     }
 
     /*----------  VIEW FUNCTIONS  ---------------------------------------*/
@@ -175,22 +176,23 @@ contract Multicall {
      * @return state Aggregated rig state
      */
     function getRig(address rig, address account) external view returns (RigState memory state) {
-        state.epochId = Rig(rig).epochId();
-        state.initPrice = Rig(rig).initPrice();
-        state.epochStartTime = Rig(rig).epochStartTime();
-        state.ups = Rig(rig).ups();
+        state.epochId = IRig(rig).epochId();
+        state.initPrice = IRig(rig).initPrice();
+        state.epochStartTime = IRig(rig).epochStartTime();
+        state.ups = IRig(rig).ups();
         state.glazed = state.ups * (block.timestamp - state.epochStartTime);
-        state.price = Rig(rig).getPrice();
-        state.nextUps = Rig(rig).getUps();
-        state.miner = Rig(rig).miner();
-        state.uri = Rig(rig).uri();
+        state.price = IRig(rig).getPrice();
+        state.nextUps = IRig(rig).getUps();
+        state.miner = IRig(rig).miner();
+        state.uri = IRig(rig).uri();
+        state.unitUri = IRig(rig).unitUri();
 
-        address unitToken = Rig(rig).unit();
+        address unitToken = IRig(rig).unit();
         address auction = ICore(core).rigToAuction(rig);
 
         // Calculate Unit price in DONUT from LP reserves
         if (auction != address(0)) {
-            address lpToken = Auction(auction).paymentToken();
+            address lpToken = IAuction(auction).paymentToken();
             uint256 donutInLP = IERC20(donut).balanceOf(lpToken);
             uint256 unitInLP = IERC20(unitToken).balanceOf(lpToken);
             state.unitPrice = unitInLP == 0 ? 0 : donutInLP * 1e18 / unitInLP;
@@ -214,11 +216,11 @@ contract Multicall {
     function getAuction(address rig, address account) external view returns (AuctionState memory state) {
         address auction = ICore(core).rigToAuction(rig);
 
-        state.epochId = Auction(auction).epochId();
-        state.initPrice = Auction(auction).initPrice();
-        state.startTime = Auction(auction).startTime();
-        state.paymentToken = Auction(auction).paymentToken();
-        state.price = Auction(auction).getPrice();
+        state.epochId = IAuction(auction).epochId();
+        state.initPrice = IAuction(auction).initPrice();
+        state.startTime = IAuction(auction).startTime();
+        state.paymentToken = IAuction(auction).paymentToken();
+        state.price = IAuction(auction).getPrice();
 
         // LP price in DONUT = (DONUT in LP * 2) / LP total supply
         uint256 lpTotalSupply = IERC20(state.paymentToken).totalSupply();

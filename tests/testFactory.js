@@ -100,6 +100,7 @@ describe("Core Tests", function () {
       launcher: user0.address,
       tokenName: "Test Unit",
       tokenSymbol: "TUNIT",
+      unitUri: "",
       donutAmount: convert("500", 18),
       teamAddress: team.address,
       initialUps: convert("4", 18),
@@ -336,6 +337,7 @@ describe("Core Tests", function () {
       launcher: user0.address,
       tokenName: "Test Unit 2",
       tokenSymbol: "TUNIT2",
+      unitUri: "",
       donutAmount: convert("100", 18), // Less than minDonutForLaunch (200)
       teamAddress: team.address,
       initialUps: convert("4", 18),
@@ -366,6 +368,7 @@ describe("Core Tests", function () {
       launcher: user0.address,
       tokenName: "Test Unit 2",
       tokenSymbol: "TUNIT2",
+      unitUri: "",
       donutAmount: convert("500", 18),
       teamAddress: AddressZero, // Invalid
       initialUps: convert("4", 18),
