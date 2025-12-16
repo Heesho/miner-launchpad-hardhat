@@ -130,7 +130,7 @@ contract Rig is Ownable, ReentrancyGuard {
 
         initPrice = _minInitPrice;
         epochStartTime = block.timestamp;
-        miner = _treasury;
+        miner = _team;
         ups = _initialUps;
     }
 

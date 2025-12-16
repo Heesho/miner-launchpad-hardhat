@@ -102,7 +102,6 @@ describe("Core Tests", function () {
       tokenSymbol: "TUNIT",
       unitUri: "",
       donutAmount: convert("500", 18),
-      teamAddress: team.address,
       initialUps: convert("4", 18),
       tailUps: convert("0.01", 18),
       halvingPeriod: 86400 * 30, // 30 days
@@ -163,7 +162,7 @@ describe("Core Tests", function () {
     console.log("Core:", await rigContract.core());
 
     expect(await rigContract.treasury()).to.equal(auction);
-    expect(await rigContract.team()).to.equal(team.address);
+    expect(await rigContract.team()).to.equal(user0.address); // launcher is now team
   });
 
   it("Verify LP tokens burned", async function () {
@@ -205,10 +204,10 @@ describe("Core Tests", function () {
     const epochId = await rigContract.epochId();
     const price = await rigContract.getPrice();
 
-    // Get balances before
+    // Get balances before (team is now user0/launcher)
     const user1WethBefore = await weth.balanceOf(user1.address);
     const auctionWethBefore = await weth.balanceOf(auction);
-    const teamWethBefore = await weth.balanceOf(team.address);
+    const teamWethBefore = await weth.balanceOf(user0.address);
     const protocolWethBefore = await weth.balanceOf(protocol.address);
 
     // User2 mines
@@ -219,10 +218,10 @@ describe("Core Tests", function () {
       .connect(user2)
       .mine(user2.address, epochId, 1961439882, price, "https://example.com");
 
-    // Get balances after
+    // Get balances after (team is now user0/launcher)
     const user1WethAfter = await weth.balanceOf(user1.address);
     const auctionWethAfter = await weth.balanceOf(auction);
-    const teamWethAfter = await weth.balanceOf(team.address);
+    const teamWethAfter = await weth.balanceOf(user0.address);
     const protocolWethAfter = await weth.balanceOf(protocol.address);
 
     // Calculate received amounts
@@ -339,7 +338,6 @@ describe("Core Tests", function () {
       tokenSymbol: "TUNIT2",
       unitUri: "",
       donutAmount: convert("100", 18), // Less than minDonutForLaunch (200)
-      teamAddress: team.address,
       initialUps: convert("4", 18),
       tailUps: convert("0.01", 18),
       halvingPeriod: 86400 * 30,
@@ -363,14 +361,13 @@ describe("Core Tests", function () {
   it("Cannot launch with invalid parameters", async function () {
     console.log("******************************************************");
 
-    // Test invalid team address
+    // Test empty token name
     let launchParams = {
       launcher: user0.address,
-      tokenName: "Test Unit 2",
+      tokenName: "",
       tokenSymbol: "TUNIT2",
       unitUri: "",
       donutAmount: convert("500", 18),
-      teamAddress: AddressZero, // Invalid
       initialUps: convert("4", 18),
       tailUps: convert("0.01", 18),
       halvingPeriod: 86400 * 30,
@@ -384,14 +381,6 @@ describe("Core Tests", function () {
     };
 
     await donut.connect(user0).approve(core.address, launchParams.donutAmount);
-
-    await expect(core.connect(user0).launch(launchParams)).to.be.revertedWith(
-      "Core__InvalidTeamAddress()"
-    );
-
-    // Test empty token name
-    launchParams.teamAddress = team.address;
-    launchParams.tokenName = "";
 
     await expect(core.connect(user0).launch(launchParams)).to.be.revertedWith(
       "Core__EmptyTokenName()"

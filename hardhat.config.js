@@ -23,7 +23,7 @@ module.exports = {
     },
   },
   networks: {
-    mainnet: {
+    base: {
       url: RPC_URL,
       chainId: CHAIN_ID,
       accounts: [PRIVATE_KEY],
@@ -31,14 +31,14 @@ module.exports = {
     hardhat: {},
   },
   etherscan: {
-    apiKey: SCAN_API_KEY,
+    apiKey: {
+      base: SCAN_API_KEY,
+    },
     customChains: [
       {
-        network: "mainnet",
+        network: "base",
         chainId: 8453,
         urls: {
-          // apiURL: "https://api.etherscan.io/v2/api?chainid=84532",
-          // browserURL: "https://sepolia.basescan.org/",
           apiURL: "https://api.etherscan.io/v2/api?chainid=8453",
           browserURL: "https://basescan.org/",
         },

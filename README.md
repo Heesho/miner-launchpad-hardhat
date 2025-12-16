@@ -373,7 +373,6 @@ const params = {
   tokenSymbol: "MTK",
   unitUri: "ipfs://QmYourMetadataHash",
   donutAmount: ethers.utils.parseEther("1000"),
-  teamAddress: teamAddress,
   initialUps: ethers.utils.parseEther("4"),
   tailUps: ethers.utils.parseEther("0.01"),
   halvingPeriod: 30 * 24 * 60 * 60,

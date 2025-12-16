@@ -29,7 +29,6 @@ async function launchFreshRig(launcher, params = {}) {
     tokenSymbol: "TUNIT",
     unitUri: "",
     donutAmount: convert("10", 18), // Reduced for testing
-    teamAddress: team.address,
     initialUps: convert("4", 18),
     tailUps: convert("0.01", 18),
     halvingPeriod: 86400 * 30,
@@ -301,19 +300,19 @@ describe("Business Logic Tests", function () {
       // First mine to set up a previous rig holder
       await mineRig(testRig, user1);
 
-      // Get balances before second mine
+      // Get balances before second mine (team is now user0/launcher)
       const prevRigBefore = await weth.balanceOf(user1.address);
       const treasuryBefore = await weth.balanceOf(testAuction);
-      const teamBefore = await weth.balanceOf(team.address);
+      const teamBefore = await weth.balanceOf(user0.address);
       const protocolBefore = await weth.balanceOf(protocol.address);
 
       // Second mine
       await mineRig(testRig, user2);
 
-      // Get balances after
+      // Get balances after (team is now user0/launcher)
       const prevRigAfter = await weth.balanceOf(user1.address);
       const treasuryAfter = await weth.balanceOf(testAuction);
-      const teamAfter = await weth.balanceOf(team.address);
+      const teamAfter = await weth.balanceOf(user0.address);
       const protocolAfter = await weth.balanceOf(protocol.address);
 
       // Calculate received
@@ -900,7 +899,6 @@ describe("Business Logic Tests", function () {
           tokenSymbol: "TST",
           unitUri: "",
           donutAmount: convert("10", 18),
-          teamAddress: team.address,
           initialUps: 0, // Invalid
           tailUps: convert("0.01", 18),
           halvingPeriod: 86400,
@@ -925,7 +923,6 @@ describe("Business Logic Tests", function () {
           tokenSymbol: "TST",
           unitUri: "",
           donutAmount: convert("10", 18),
-          teamAddress: team.address,
           initialUps: convert("4", 18),
           tailUps: 0, // Invalid
           halvingPeriod: 86400,
@@ -950,7 +947,6 @@ describe("Business Logic Tests", function () {
           tokenSymbol: "TST",
           unitUri: "",
           donutAmount: convert("10", 18),
-          teamAddress: team.address,
           initialUps: convert("1", 18),
           tailUps: convert("2", 18), // tailUps > initialUps
           halvingPeriod: 86400,
@@ -975,7 +971,6 @@ describe("Business Logic Tests", function () {
           tokenSymbol: "TST",
           unitUri: "",
           donutAmount: convert("10", 18),
-          teamAddress: team.address,
           initialUps: convert("4", 18),
           tailUps: convert("0.01", 18),
           halvingPeriod: 0, // Invalid
@@ -1000,7 +995,6 @@ describe("Business Logic Tests", function () {
           tokenSymbol: "", // Invalid
           unitUri: "",
           donutAmount: convert("10", 18),
-          teamAddress: team.address,
           initialUps: convert("4", 18),
           tailUps: convert("0.01", 18),
           halvingPeriod: 86400,
@@ -1194,7 +1188,6 @@ describe("Business Logic Tests", function () {
           tokenSymbol: "TST",
           unitUri: "",
           donutAmount: convert("10", 18),
-          teamAddress: team.address,
           initialUps: convert("4", 18),
           tailUps: convert("0.01", 18),
           halvingPeriod: 86400,
@@ -1219,7 +1212,6 @@ describe("Business Logic Tests", function () {
           tokenSymbol: "TST",
           unitUri: "",
           donutAmount: convert("10", 18),
-          teamAddress: team.address,
           initialUps: convert("4", 18),
           tailUps: convert("0.01", 18),
           halvingPeriod: 86400,
@@ -1244,7 +1236,6 @@ describe("Business Logic Tests", function () {
           tokenSymbol: "TST",
           unitUri: "",
           donutAmount: convert("10", 18),
-          teamAddress: team.address,
           initialUps: convert("4", 18),
           tailUps: convert("0.01", 18),
           halvingPeriod: 86400,
@@ -1269,7 +1260,6 @@ describe("Business Logic Tests", function () {
           tokenSymbol: "TST",
           unitUri: "",
           donutAmount: convert("10", 18),
-          teamAddress: team.address,
           initialUps: convert("4", 18),
           tailUps: convert("0.01", 18),
           halvingPeriod: 86400,

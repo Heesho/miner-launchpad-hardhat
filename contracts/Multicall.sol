@@ -151,7 +151,6 @@ contract Multicall {
             tokenSymbol: params.tokenSymbol,
             unitUri: params.unitUri,
             donutAmount: params.donutAmount,
-            teamAddress: params.teamAddress,
             initialUps: params.initialUps,
             tailUps: params.tailUps,
             halvingPeriod: params.halvingPeriod,

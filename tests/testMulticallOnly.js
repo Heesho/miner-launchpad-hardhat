@@ -101,7 +101,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 tokenSymbol: "MUNIT",
                 unitUri: "",
                 donutAmount: convert("500", 18),
-                teamAddress: team.address,
                 initialUps: convert("4", 18),
                 tailUps: convert("0.01", 18),
                 halvingPeriod: 2592000,
@@ -145,7 +144,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 tokenSymbol: "OVRD",
                 unitUri: "",
                 donutAmount: convert("200", 18),
-                teamAddress: team.address,
                 initialUps: convert("1", 18),
                 tailUps: convert("0.01", 18),
                 halvingPeriod: 86400,
@@ -177,7 +175,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 tokenSymbol: "NOAP",
                 unitUri: "",
                 donutAmount: convert("200", 18),
-                teamAddress: team.address,
                 initialUps: convert("1", 18),
                 tailUps: convert("0.01", 18),
                 halvingPeriod: 86400,
@@ -203,7 +200,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 tokenSymbol: "NOBAL",
                 unitUri: "",
                 donutAmount: convert("10000", 18), // More than user has
-                teamAddress: team.address,
                 initialUps: convert("1", 18),
                 tailUps: convert("0.01", 18),
                 halvingPeriod: 86400,
@@ -237,7 +233,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 tokenSymbol: "MTEST",
                 unitUri: "",
                 donutAmount: convert("300", 18),
-                teamAddress: team.address,
                 initialUps: convert("10", 18),
                 tailUps: convert("0.1", 18),
                 halvingPeriod: 86400,
@@ -432,7 +427,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 tokenSymbol: "STATE",
                 unitUri: "",
                 donutAmount: convert("400", 18),
-                teamAddress: team.address,
                 initialUps: convert("5", 18),
                 tailUps: convert("0.05", 18),
                 halvingPeriod: 86400 * 7,
@@ -620,7 +614,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 tokenSymbol: "BUYTEST",
                 unitUri: "",
                 donutAmount: convert("300", 18),
-                teamAddress: team.address,
                 initialUps: convert("5", 18),
                 tailUps: convert("0.05", 18),
                 halvingPeriod: 86400,
@@ -755,7 +748,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 tokenSymbol: "LIFE",
                 unitUri: "",
                 donutAmount: convert("500", 18),
-                teamAddress: team.address,
                 initialUps: convert("100", 18),
                 tailUps: convert("1", 18),
                 halvingPeriod: 86400,
@@ -783,9 +775,9 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
             // 2. Read initial state via Multicall
             let state = await multicall.getRig(rigAddr, user1.address);
             expect(state.epochId).to.equal(0);
-            // Fresh rig's initial miner is the treasury (auction)
+            // Fresh rig's initial miner is the launcher
             const initialMiner = await rig.miner();
-            expect(initialMiner).to.equal(auctionAddr);
+            expect(initialMiner).to.equal(user0.address);
 
             // 3. First user mines via Multicall
             let epochId = await rig.epochId();
@@ -846,7 +838,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 tokenSymbol: "MULTI",
                 unitUri: "",
                 donutAmount: convert("300", 18),
-                teamAddress: team.address,
                 initialUps: convert("50", 18),
                 tailUps: convert("0.5", 18),
                 halvingPeriod: 86400,
@@ -905,7 +896,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 tokenSymbol: "FRONT",
                 unitUri: "",
                 donutAmount: convert("200", 18),
-                teamAddress: team.address,
                 initialUps: convert("10", 18),
                 tailUps: convert("0.1", 18),
                 halvingPeriod: 86400,
@@ -974,7 +964,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 tokenSymbol: "EDGE",
                 unitUri: "",
                 donutAmount: convert("200", 18),
-                teamAddress: team.address,
                 initialUps: convert("5", 18),
                 tailUps: convert("0.05", 18),
                 halvingPeriod: 86400,
@@ -1081,7 +1070,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 tokenSymbol: "GAS",
                 unitUri: "",
                 donutAmount: convert("200", 18),
-                teamAddress: team.address,
                 initialUps: convert("1", 18),
                 tailUps: convert("0.01", 18),
                 halvingPeriod: 86400,

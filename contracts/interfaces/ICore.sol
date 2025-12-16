@@ -12,7 +12,6 @@ interface ICore {
         string tokenSymbol;
         string unitUri;
         uint256 donutAmount;
-        address teamAddress;
         uint256 initialUps;
         uint256 tailUps;
         uint256 halvingPeriod;

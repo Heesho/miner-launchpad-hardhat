@@ -34,7 +34,6 @@ async function launchFreshRig(launcher, params = {}) {
     tokenSymbol: "TUNIT",
     unitUri: "",
     donutAmount: convert("10", 18),
-    teamAddress: team.address,
     initialUps: convert("4", 18),
     tailUps: convert("0.01", 18),
     halvingPeriod: 86400 * 30,

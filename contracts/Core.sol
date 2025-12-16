@@ -60,12 +60,11 @@ contract Core is Ownable {
      * @notice Parameters for launching a new Rig.
      */
     struct LaunchParams {
-        address launcher; // address to receive Rig ownership
+        address launcher; // address to receive Rig ownership, team fees, and initial miner
         string tokenName; // Unit token name
         string tokenSymbol; // Unit token symbol
         string unitUri; // metadata URI for the unit token
         uint256 donutAmount; // DONUT to provide for LP
-        address teamAddress; // team fee recipient
         uint256 initialUps; // starting units per second
         uint256 tailUps; // minimum units per second
         uint256 halvingPeriod; // time between halvings
@@ -83,7 +82,6 @@ contract Core is Ownable {
     error Core__InvalidProtocolFeeAddress();
     error Core__InsufficientDonut();
     error Core__InvalidLauncher();
-    error Core__InvalidTeamAddress();
     error Core__EmptyTokenName();
     error Core__EmptyTokenSymbol();
     error Core__InvalidInitialUps();
@@ -162,7 +160,6 @@ contract Core is Ownable {
         // Validate inputs
         if (params.launcher == address(0)) revert Core__InvalidLauncher();
         if (params.donutAmount < minDonutForLaunch) revert Core__InsufficientDonut();
-        if (params.teamAddress == address(0)) revert Core__InvalidTeamAddress();
         if (bytes(params.tokenName).length == 0) revert Core__EmptyTokenName();
         if (bytes(params.tokenSymbol).length == 0) revert Core__EmptyTokenSymbol();
         if (params.initialUps == 0) revert Core__InvalidInitialUps();
@@ -212,7 +209,7 @@ contract Core is Ownable {
             unitToken,
             weth,
             auction,
-            params.teamAddress,
+            params.launcher,
             address(this),
             params.unitUri,
             params.initialUps,
