@@ -235,11 +235,11 @@ describe("Rigorous Tests", function () {
   // ============================================
   describe("Edge Cases and Boundary Conditions", function () {
     it("Mining at exact epoch boundary", async function () {
-      const result = await launchFreshRig(user0, { rigEpochPeriod: 100 });
+      const result = await launchFreshRig(user0, { rigEpochPeriod: 600 });
       const rigContract = await ethers.getContractAt("Rig", result.rig);
 
       // Fast forward to exactly epoch end
-      await network.provider.send("evm_increaseTime", [100]);
+      await network.provider.send("evm_increaseTime", [600]);
       await network.provider.send("evm_mine");
 
       const price = await rigContract.getPrice();
@@ -446,8 +446,8 @@ describe("Rigorous Tests", function () {
       const result = await launchFreshRig(user0, {
         initialUps: convert("100", 18),
         tailUps: convert("10", 18),
-        halvingPeriod: 100,
-        rigEpochPeriod: 50,
+        halvingPeriod: 600,
+        rigEpochPeriod: 600,
       });
 
       const rigContract = await ethers.getContractAt("Rig", result.rig);
@@ -475,7 +475,7 @@ describe("Rigorous Tests", function () {
       expect(user1BalanceAfter).to.be.gt(user1BalanceBefore);
 
       // Trigger halving
-      await network.provider.send("evm_increaseTime", [100]);
+      await network.provider.send("evm_increaseTime", [600]);
       await network.provider.send("evm_mine");
 
       expect(await rigContract.getUps()).to.equal(convert("50", 18));

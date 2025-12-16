@@ -841,7 +841,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 initialUps: convert("50", 18),
                 tailUps: convert("0.5", 18),
                 halvingPeriod: 86400,
-                rigEpochPeriod: 300,
+                rigEpochPeriod: 600,
                 rigPriceMultiplier: convert("1.2", 18),
                 rigMinInitPrice: convert("0.00001", 18),
                 auctionInitPrice: convert("1", 18),

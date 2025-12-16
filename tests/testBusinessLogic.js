@@ -1276,6 +1276,183 @@ describe("Business Logic Tests", function () {
   });
 
   // ============================================
+  // RIG PARAMETER VALIDATION
+  // ============================================
+  describe("Rig Parameter Validation", function () {
+    it("Reverts if rig epoch period below minimum (10 minutes)", async function () {
+      await donut.connect(user1).approve(core.address, convert("10", 18));
+
+      await expect(
+        core.connect(user1).launch({
+          launcher: user1.address,
+          tokenName: "Test",
+          tokenSymbol: "TST",
+          unitUri: "",
+          donutAmount: convert("10", 18),
+          initialUps: convert("4", 18),
+          tailUps: convert("0.01", 18),
+          halvingPeriod: 86400,
+          rigEpochPeriod: 300, // 5 minutes - below 10 minute minimum
+          rigPriceMultiplier: convert("2", 18),
+          rigMinInitPrice: convert("0.0001", 18),
+          auctionInitPrice: convert("1", 18),
+          auctionEpochPeriod: 86400,
+          auctionPriceMultiplier: convert("1.2", 18),
+          auctionMinInitPrice: convert("0.001", 18),
+        })
+      ).to.be.revertedWith("Rig__EpochPeriodOutOfRange()");
+    });
+
+    it("Reverts if rig epoch period above maximum (365 days)", async function () {
+      await donut.connect(user1).approve(core.address, convert("10", 18));
+
+      await expect(
+        core.connect(user1).launch({
+          launcher: user1.address,
+          tokenName: "Test",
+          tokenSymbol: "TST",
+          unitUri: "",
+          donutAmount: convert("10", 18),
+          initialUps: convert("4", 18),
+          tailUps: convert("0.01", 18),
+          halvingPeriod: 86400,
+          rigEpochPeriod: 86400 * 366, // 366 days - above 365 day maximum
+          rigPriceMultiplier: convert("2", 18),
+          rigMinInitPrice: convert("0.0001", 18),
+          auctionInitPrice: convert("1", 18),
+          auctionEpochPeriod: 86400,
+          auctionPriceMultiplier: convert("1.2", 18),
+          auctionMinInitPrice: convert("0.001", 18),
+        })
+      ).to.be.revertedWith("Rig__EpochPeriodOutOfRange()");
+    });
+
+    it("Reverts if rig price multiplier below minimum (110%)", async function () {
+      await donut.connect(user1).approve(core.address, convert("10", 18));
+
+      await expect(
+        core.connect(user1).launch({
+          launcher: user1.address,
+          tokenName: "Test",
+          tokenSymbol: "TST",
+          unitUri: "",
+          donutAmount: convert("10", 18),
+          initialUps: convert("4", 18),
+          tailUps: convert("0.01", 18),
+          halvingPeriod: 86400,
+          rigEpochPeriod: 3600,
+          rigPriceMultiplier: convert("1.05", 18), // 105% - below 110% minimum
+          rigMinInitPrice: convert("0.0001", 18),
+          auctionInitPrice: convert("1", 18),
+          auctionEpochPeriod: 86400,
+          auctionPriceMultiplier: convert("1.2", 18),
+          auctionMinInitPrice: convert("0.001", 18),
+        })
+      ).to.be.revertedWith("Rig__PriceMultiplierOutOfRange()");
+    });
+
+    it("Reverts if rig price multiplier above maximum (300%)", async function () {
+      await donut.connect(user1).approve(core.address, convert("10", 18));
+
+      await expect(
+        core.connect(user1).launch({
+          launcher: user1.address,
+          tokenName: "Test",
+          tokenSymbol: "TST",
+          unitUri: "",
+          donutAmount: convert("10", 18),
+          initialUps: convert("4", 18),
+          tailUps: convert("0.01", 18),
+          halvingPeriod: 86400,
+          rigEpochPeriod: 3600,
+          rigPriceMultiplier: convert("4", 18), // 400% - above 300% maximum
+          rigMinInitPrice: convert("0.0001", 18),
+          auctionInitPrice: convert("1", 18),
+          auctionEpochPeriod: 86400,
+          auctionPriceMultiplier: convert("1.2", 18),
+          auctionMinInitPrice: convert("0.001", 18),
+        })
+      ).to.be.revertedWith("Rig__PriceMultiplierOutOfRange()");
+    });
+
+    it("Reverts if rig minInitPrice below absolute minimum", async function () {
+      await donut.connect(user1).approve(core.address, convert("10", 18));
+
+      await expect(
+        core.connect(user1).launch({
+          launcher: user1.address,
+          tokenName: "Test",
+          tokenSymbol: "TST",
+          unitUri: "",
+          donutAmount: convert("10", 18),
+          initialUps: convert("4", 18),
+          tailUps: convert("0.01", 18),
+          halvingPeriod: 86400,
+          rigEpochPeriod: 3600,
+          rigPriceMultiplier: convert("2", 18),
+          rigMinInitPrice: 100, // Below 1e6 minimum
+          auctionInitPrice: convert("1", 18),
+          auctionEpochPeriod: 86400,
+          auctionPriceMultiplier: convert("1.2", 18),
+          auctionMinInitPrice: convert("0.001", 18),
+        })
+      ).to.be.revertedWith("Rig__MinInitPriceBelowAbsoluteMin()");
+    });
+
+    it("Accepts valid rig parameters at boundary values", async function () {
+      await donut.connect(user1).approve(core.address, convert("10", 18));
+
+      // Should not revert with exact minimum values
+      const tx = await core.connect(user1).launch({
+        launcher: user1.address,
+        tokenName: "Boundary Test",
+        tokenSymbol: "BNDRY",
+        unitUri: "",
+        donutAmount: convert("10", 18),
+        initialUps: convert("4", 18),
+        tailUps: convert("0.01", 18),
+        halvingPeriod: 86400,
+        rigEpochPeriod: 600, // Exact minimum (10 minutes)
+        rigPriceMultiplier: convert("1.1", 18), // Exact minimum (110%)
+        rigMinInitPrice: 1000000, // Exact minimum (1e6)
+        auctionInitPrice: convert("1", 18),
+        auctionEpochPeriod: 86400,
+        auctionPriceMultiplier: convert("1.1", 18),
+        auctionMinInitPrice: convert("0.001", 18),
+      });
+
+      const receipt = await tx.wait();
+      expect(receipt.status).to.equal(1);
+    });
+
+    it("Accepts valid rig parameters at maximum boundary values", async function () {
+      await donut.connect(user1).approve(core.address, convert("10", 18));
+
+      // Should not revert with exact maximum values
+      const tx = await core.connect(user1).launch({
+        launcher: user1.address,
+        tokenName: "Max Boundary Test",
+        tokenSymbol: "MAXB",
+        unitUri: "",
+        donutAmount: convert("10", 18),
+        initialUps: convert("4", 18),
+        tailUps: convert("0.01", 18),
+        halvingPeriod: 86400,
+        rigEpochPeriod: 86400 * 365, // Exact maximum (365 days)
+        rigPriceMultiplier: convert("3", 18), // Exact maximum (300%)
+        rigMinInitPrice: convert("0.0001", 18),
+        auctionInitPrice: convert("1", 18),
+        auctionEpochPeriod: 86400,
+        auctionPriceMultiplier: convert("1.1", 18),
+        auctionMinInitPrice: convert("0.001", 18),
+      });
+
+      const receipt = await tx.wait();
+      expect(receipt.status).to.equal(1);
+    });
+  });
+
+  // ============================================
   // COMPLEX SCENARIOS
   // ============================================
   describe("Complex Scenarios", function () {

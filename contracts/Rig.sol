@@ -27,8 +27,14 @@ contract Rig is Ownable, ReentrancyGuard {
     uint256 public constant PROTOCOL_FEE = 100; // 1% to protocol
     uint256 public constant DIVISOR = 10_000; // fee divisor (basis points)
     uint256 public constant PRECISION = 1e18; // precision for multiplier calcs
-    uint256 public constant ABS_MAX_INIT_PRICE = type(uint256).max;
-    uint256 public constant ABS_MIN_INIT_PRICE = 1e6; // absolute minimum init price
+
+    // Launch parameter bounds
+    uint256 public constant MIN_EPOCH_PERIOD = 10 minutes;
+    uint256 public constant MAX_EPOCH_PERIOD = 365 days;
+    uint256 public constant MIN_PRICE_MULTIPLIER = 1.1e18; // Should at least be 110% of settlement price
+    uint256 public constant MAX_PRICE_MULTIPLIER = 3e18; // Should not exceed 300% of settlement price
+    uint256 public constant ABS_MIN_INIT_PRICE = 1e6; // Minimum sane value for init price
+    uint256 public constant ABS_MAX_INIT_PRICE = type(uint192).max; // chosen so that initPrice * priceMultiplier does not exceed uint256
 
     /*----------  IMMUTABLES  -------------------------------------------*/
 
@@ -66,6 +72,9 @@ contract Rig is Ownable, ReentrancyGuard {
     error Rig__MaxPriceExceeded();
     error Rig__InvalidTreasury();
     error Rig__MinInitPriceBelowAbsoluteMin();
+    error Rig__MinInitPriceAboveAbsoluteMax();
+    error Rig__EpochPeriodOutOfRange();
+    error Rig__PriceMultiplierOutOfRange();
 
     /*----------  EVENTS  -----------------------------------------------*/
 
@@ -112,6 +121,9 @@ contract Rig is Ownable, ReentrancyGuard {
     ) {
         if (_treasury == address(0)) revert Rig__InvalidTreasury();
         if (_minInitPrice < ABS_MIN_INIT_PRICE) revert Rig__MinInitPriceBelowAbsoluteMin();
+        if (_minInitPrice > ABS_MAX_INIT_PRICE) revert Rig__MinInitPriceAboveAbsoluteMax();
+        if (_epochPeriod < MIN_EPOCH_PERIOD || _epochPeriod > MAX_EPOCH_PERIOD) revert Rig__EpochPeriodOutOfRange();
+        if (_priceMultiplier < MIN_PRICE_MULTIPLIER || _priceMultiplier > MAX_PRICE_MULTIPLIER) revert Rig__PriceMultiplierOutOfRange();
 
         unit = _unit;
         quote = _quote;
