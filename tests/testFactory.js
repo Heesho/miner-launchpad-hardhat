@@ -23,11 +23,11 @@ describe("Core Tests", function () {
     [owner, protocol, team, user0, user1, user2] = await ethers.getSigners();
 
     // Deploy WETH
-    const wethArtifact = await ethers.getContractFactory("Base");
+    const wethArtifact = await ethers.getContractFactory("MockWETH");
     weth = await wethArtifact.deploy();
     console.log("- WETH Initialized");
 
-    // Deploy mock DONUT token (using Base as a simple ERC20)
+    // Deploy mock DONUT token (using MockWETH as a simple ERC20)
     donut = await wethArtifact.deploy();
     console.log("- DONUT Initialized");
 

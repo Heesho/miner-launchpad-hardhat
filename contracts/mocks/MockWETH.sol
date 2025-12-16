@@ -3,7 +3,7 @@ pragma solidity 0.8.19;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract Base is ERC20 {
+contract MockWETH is ERC20 {
     constructor() ERC20("Wrapped Ether", "WETH") {}
 
     // Deposit ETH and mint WETH

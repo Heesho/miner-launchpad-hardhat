@@ -36,11 +36,11 @@ describe("Comprehensive Security Tests", function () {
         [owner, user0, user1, user2, user3, attacker, treasury, team] = await ethers.getSigners();
 
         // Deploy base contracts
-        const WETH9 = await ethers.getContractFactory("Base");
+        const WETH9 = await ethers.getContractFactory("MockWETH");
         WETH = await WETH9.deploy();
         await WETH.deployed();
 
-        const DONUT_ERC20 = await ethers.getContractFactory("Base");
+        const DONUT_ERC20 = await ethers.getContractFactory("MockWETH");
         DONUT = await DONUT_ERC20.deploy();
         await DONUT.deployed();
 

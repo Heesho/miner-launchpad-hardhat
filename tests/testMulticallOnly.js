@@ -44,9 +44,9 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
         [owner, protocol, team, user0, user1, user2, user3] = await ethers.getSigners();
 
         // Deploy base tokens
-        const Base = await ethers.getContractFactory("Base");
-        weth = await Base.deploy();
-        donut = await Base.deploy();
+        const MockWETH = await ethers.getContractFactory("MockWETH");
+        weth = await MockWETH.deploy();
+        donut = await MockWETH.deploy();
 
         // Deploy Uniswap mocks
         const MockFactory = await ethers.getContractFactory("MockUniswapV2Factory");
