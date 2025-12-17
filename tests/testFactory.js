@@ -62,9 +62,7 @@ describe("Core Tests", function () {
       donut.address,
       uniswapFactory.address,
       uniswapRouter.address,
-      weth.address,
       convert("100", 18), // minDonutForLaunch
-      convert("1000000", 18), // initialUnitMintAmount
       unitFactory.address,
       rigFactory.address,
       auctionFactory.address
@@ -89,7 +87,6 @@ describe("Core Tests", function () {
     console.log("Protocol Fee Address:", await core.protocolFeeAddress());
     console.log("DONUT Token:", await core.donutToken());
     console.log("Min DONUT for Launch:", divDec(await core.minDonutForLaunch()));
-    console.log("Initial Unit Mint Amount:", divDec(await core.initialUnitMintAmount()));
     console.log("Deployed Rigs Length:", (await core.deployedRigsLength()).toString());
   });
 
@@ -98,10 +95,12 @@ describe("Core Tests", function () {
 
     const launchParams = {
       launcher: user0.address,
+      quoteToken: weth.address,
       tokenName: "Test Unit",
       tokenSymbol: "TUNIT",
-      unitUri: "",
+      uri: "",
       donutAmount: convert("500", 18),
+      unitAmount: convert("1000000", 18),
       initialUps: convert("4", 18),
       tailUps: convert("0.01", 18),
       halvingPeriod: 86400 * 30, // 30 days
@@ -193,7 +192,7 @@ describe("Core Tests", function () {
       .mine(user1.address, epochId, 1961439882, price, "https://example.com");
 
     console.log("User1 mined successfully");
-    expect(await rigContract.miner()).to.equal(user1.address);
+    expect(await rigContract.epochMiner()).to.equal(user1.address);
   });
 
   it("Verify fee distribution", async function () {
@@ -323,21 +322,17 @@ describe("Core Tests", function () {
     console.log("Min DONUT for launch:", divDec(await core.minDonutForLaunch()));
   });
 
-  it("Protocol owner can change initial unit mint amount", async function () {
-    console.log("******************************************************");
-    await core.connect(owner).setInitialUnitMintAmount(convert("2000000", 18));
-    console.log("Initial unit mint amount:", divDec(await core.initialUnitMintAmount()));
-  });
-
   it("Cannot launch with insufficient DONUT", async function () {
     console.log("******************************************************");
 
     const launchParams = {
       launcher: user0.address,
+      quoteToken: weth.address,
       tokenName: "Test Unit 2",
       tokenSymbol: "TUNIT2",
-      unitUri: "",
+      uri: "",
       donutAmount: convert("100", 18), // Less than minDonutForLaunch (200)
+      unitAmount: convert("1000000", 18),
       initialUps: convert("4", 18),
       tailUps: convert("0.01", 18),
       halvingPeriod: 86400 * 30,
@@ -364,10 +359,12 @@ describe("Core Tests", function () {
     // Test empty token name
     let launchParams = {
       launcher: user0.address,
+      quoteToken: weth.address,
       tokenName: "",
       tokenSymbol: "TUNIT2",
-      unitUri: "",
+      uri: "",
       donutAmount: convert("500", 18),
+      unitAmount: convert("1000000", 18),
       initialUps: convert("4", 18),
       tailUps: convert("0.01", 18),
       halvingPeriod: 86400 * 30,

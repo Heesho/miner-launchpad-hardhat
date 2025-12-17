@@ -72,9 +72,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
             donut.address,
             uniswapFactory.address,
             uniswapRouter.address,
-            weth.address,
             convert("100", 18),
-            convert("1000000", 18),
             unitFactory.address,
             rigFactory.address,
             auctionFactory.address
@@ -97,10 +95,12 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
         it("Can launch a rig through Multicall", async function () {
             const launchParams = {
                 launcher: AddressZero, // Will be overwritten by Multicall
+                quoteToken: weth.address,
                 tokenName: "Multicall Unit",
                 tokenSymbol: "MUNIT",
-                unitUri: "",
+                uri: "",
                 donutAmount: convert("500", 18),
+                unitAmount: convert("1000000", 18),
                 initialUps: convert("4", 18),
                 tailUps: convert("0.01", 18),
                 halvingPeriod: 2592000,
@@ -140,10 +140,12 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
         it("Launcher param is overwritten with msg.sender", async function () {
             const launchParams = {
                 launcher: user3.address, // Try to set someone else as launcher
+                quoteToken: weth.address,
                 tokenName: "Override Test",
                 tokenSymbol: "OVRD",
-                unitUri: "",
+                uri: "",
                 donutAmount: convert("200", 18),
+                unitAmount: convert("1000000", 18),
                 initialUps: convert("1", 18),
                 tailUps: convert("0.01", 18),
                 halvingPeriod: 86400,
@@ -171,10 +173,12 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
         it("Reverts if DONUT not approved", async function () {
             const launchParams = {
                 launcher: AddressZero,
+                quoteToken: weth.address,
                 tokenName: "No Approve",
                 tokenSymbol: "NOAP",
-                unitUri: "",
+                uri: "",
                 donutAmount: convert("200", 18),
+                unitAmount: convert("1000000", 18),
                 initialUps: convert("1", 18),
                 tailUps: convert("0.01", 18),
                 halvingPeriod: 86400,
@@ -196,9 +200,10 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
         it("Reverts with insufficient DONUT balance", async function () {
             const launchParams = {
                 launcher: AddressZero,
+                quoteToken: weth.address,
                 tokenName: "No Balance",
                 tokenSymbol: "NOBAL",
-                unitUri: "",
+                uri: "",
                 donutAmount: convert("10000", 18), // More than user has
                 initialUps: convert("1", 18),
                 tailUps: convert("0.01", 18),
@@ -229,10 +234,12 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
             // Launch a fresh rig for mining tests
             const launchParams = {
                 launcher: AddressZero,
+                quoteToken: weth.address,
                 tokenName: "Mining Test Unit",
                 tokenSymbol: "MTEST",
-                unitUri: "",
+                uri: "",
                 donutAmount: convert("300", 18),
+                unitAmount: convert("1000000", 18),
                 initialUps: convert("10", 18),
                 tailUps: convert("0.1", 18),
                 halvingPeriod: 86400,
@@ -271,8 +278,8 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 { value: price.mul(2) } // Send extra ETH
             );
 
-            expect(await rig.miner()).to.equal(user1.address);
-            expect(await rig.uri()).to.equal("First mine via Multicall");
+            expect(await rig.epochMiner()).to.equal(user1.address);
+            expect(await rig.epochUri()).to.equal("First mine via Multicall");
         });
 
         it("Refunds excess ETH as WETH", async function () {
@@ -341,7 +348,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 { value: 0 }
             );
 
-            expect(await rig.miner()).to.equal(user1.address);
+            expect(await rig.epochMiner()).to.equal(user1.address);
         });
 
         it("Reverts with wrong epochId", async function () {
@@ -423,10 +430,12 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
             // Launch a fresh rig
             const launchParams = {
                 launcher: AddressZero,
+                quoteToken: weth.address,
                 tokenName: "State Test Unit",
                 tokenSymbol: "STATE",
-                unitUri: "",
+                uri: "",
                 donutAmount: convert("400", 18),
+                unitAmount: convert("1000000", 18),
                 initialUps: convert("5", 18),
                 tailUps: convert("0.05", 18),
                 halvingPeriod: 86400 * 7,
@@ -454,11 +463,11 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
             const state = await multicall.getRig(rig.address, user1.address);
 
             expect(state.epochId).to.equal(0);
-            expect(state.initPrice).to.equal(await rig.initPrice());
+            expect(state.initPrice).to.equal(await rig.epochInitPrice());
             expect(state.epochStartTime).to.equal(await rig.epochStartTime());
-            expect(state.ups).to.equal(await rig.ups());
-            expect(state.miner).to.equal(await rig.miner());
-            expect(state.uri).to.equal(await rig.uri());
+            expect(state.ups).to.equal(await rig.epochUps());
+            expect(state.miner).to.equal(await rig.epochMiner());
+            expect(state.epochUri).to.equal(await rig.epochUri());
         });
 
         it("getRig returns correct user balances", async function () {
@@ -610,10 +619,12 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
             // Launch a fresh rig for each test
             const launchParams = {
                 launcher: AddressZero,
+                quoteToken: weth.address,
                 tokenName: "Buy Test Unit",
                 tokenSymbol: "BUYTEST",
-                unitUri: "",
+                uri: "",
                 donutAmount: convert("300", 18),
+                unitAmount: convert("1000000", 18),
                 initialUps: convert("5", 18),
                 tailUps: convert("0.05", 18),
                 halvingPeriod: 86400,
@@ -744,10 +755,12 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
             // 1. Launch via Multicall
             const launchParams = {
                 launcher: AddressZero,
+                quoteToken: weth.address,
                 tokenName: "Lifecycle Test",
                 tokenSymbol: "LIFE",
-                unitUri: "",
+                uri: "",
                 donutAmount: convert("500", 18),
+                unitAmount: convert("1000000", 18),
                 initialUps: convert("100", 18),
                 tailUps: convert("1", 18),
                 halvingPeriod: 86400,
@@ -776,7 +789,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
             let state = await multicall.getRig(rigAddr, user1.address);
             expect(state.epochId).to.equal(0);
             // Fresh rig's initial miner is the launcher
-            const initialMiner = await rig.miner();
+            const initialMiner = await rig.epochMiner();
             expect(initialMiner).to.equal(user0.address);
 
             // 3. First user mines via Multicall
@@ -796,7 +809,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
             // 4. Verify state updated
             state = await multicall.getRig(rigAddr, user1.address);
             expect(state.miner).to.equal(user1.address);
-            expect(state.uri).to.equal("First miner");
+            expect(state.epochUri).to.equal("First miner");
 
             // 5. Wait and let tokens accumulate
             await increaseTime(300);
@@ -834,10 +847,12 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
             // Launch rig
             const launchParams = {
                 launcher: AddressZero,
+                quoteToken: weth.address,
                 tokenName: "Multi User Test",
                 tokenSymbol: "MULTI",
-                unitUri: "",
+                uri: "",
                 donutAmount: convert("300", 18),
+                unitAmount: convert("1000000", 18),
                 initialUps: convert("50", 18),
                 tailUps: convert("0.5", 18),
                 halvingPeriod: 86400,
@@ -892,10 +907,12 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
             // Launch rig
             const launchParams = {
                 launcher: AddressZero,
+                quoteToken: weth.address,
                 tokenName: "Frontend Sim",
                 tokenSymbol: "FRONT",
-                unitUri: "",
+                uri: "",
                 donutAmount: convert("200", 18),
+                unitAmount: convert("1000000", 18),
                 initialUps: convert("10", 18),
                 tailUps: convert("0.1", 18),
                 halvingPeriod: 86400,
@@ -960,10 +977,12 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
         before(async function () {
             const launchParams = {
                 launcher: AddressZero,
+                quoteToken: weth.address,
                 tokenName: "Edge Case Test",
                 tokenSymbol: "EDGE",
-                unitUri: "",
+                uri: "",
                 donutAmount: convert("200", 18),
+                unitAmount: convert("1000000", 18),
                 initialUps: convert("5", 18),
                 tailUps: convert("0.05", 18),
                 halvingPeriod: 86400,
@@ -1037,7 +1056,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 );
             }
 
-            expect(await rig.miner()).to.equal(user1.address);
+            expect(await rig.epochMiner()).to.equal(user1.address);
         });
 
         it("Long URI strings work via Multicall", async function () {
@@ -1055,7 +1074,7 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
                 { value: price.add(convert("1", 18)) }
             );
 
-            expect(await rig.uri()).to.equal(longUri);
+            expect(await rig.epochUri()).to.equal(longUri);
         });
     });
 
@@ -1066,10 +1085,12 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
         it("Launch gas cost", async function () {
             const launchParams = {
                 launcher: AddressZero,
+                quoteToken: weth.address,
                 tokenName: "Gas Test",
                 tokenSymbol: "GAS",
-                unitUri: "",
+                uri: "",
                 donutAmount: convert("200", 18),
+                unitAmount: convert("1000000", 18),
                 initialUps: convert("1", 18),
                 tailUps: convert("0.01", 18),
                 halvingPeriod: 86400,

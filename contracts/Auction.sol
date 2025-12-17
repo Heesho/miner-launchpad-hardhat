@@ -7,10 +7,12 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
 
 /**
  * @title Auction
+ * @author heesho
  * @notice A Dutch auction contract for selling accumulated assets in exchange for LP tokens.
  *         The price decays linearly from initPrice to 0 over each epoch. When purchased,
  *         all accumulated assets are transferred to the buyer, LP tokens are burned,
  *         and a new auction begins with a price based on the previous sale.
+ * @dev Forked and modified from Euler Fee Flow.
  */
 contract Auction is ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -163,17 +165,5 @@ contract Auction is ReentrancyGuard {
         uint256 timePassed = block.timestamp - startTime;
         if (timePassed > epochPeriod) return 0;
         return initPrice - initPrice * timePassed / epochPeriod;
-    }
-
-    function getEpochId() external view returns (uint256) {
-        return epochId;
-    }
-
-    function getInitPrice() external view returns (uint256) {
-        return initPrice;
-    }
-
-    function getStartTime() external view returns (uint256) {
-        return startTime;
     }
 }

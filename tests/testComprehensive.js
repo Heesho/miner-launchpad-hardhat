@@ -70,9 +70,7 @@ describe("Comprehensive Security Tests", function () {
             DONUT.address,
             uniFactory.address,
             uniRouter.address,
-            WETH.address,
             convert("100", 18),
-            convert("1000000", 18),
             unitFactory.address,
             rigFactory.address,
             auctionFactory.address
@@ -93,10 +91,12 @@ describe("Comprehensive Security Tests", function () {
     async function launchRig(launcher, options = {}) {
         const defaults = {
             launcher: launcher.address,
+            quoteToken: WETH.address,
             tokenName: "Test Unit",
             tokenSymbol: "TUNIT",
-            unitUri: "",
+            uri: "",
             donutAmount: convert("150", 18),
+            unitAmount: convert("1000000", 18),
             initialUps: convert("4", 18),
             tailUps: convert("0.01", 18),
             halvingPeriod: 2592000,
@@ -355,7 +355,7 @@ describe("Comprehensive Security Tests", function () {
                 { value: 0 }
             );
 
-            expect(await rig.miner()).to.equal(user1.address);
+            expect(await rig.epochMiner()).to.equal(user1.address);
         });
 
         it("EXPLOIT: Call buy without LP tokens", async function () {
@@ -381,9 +381,9 @@ describe("Comprehensive Security Tests", function () {
             const state = await multicall.getRig(rig.address, user1.address);
 
             expect(state.epochId).to.equal(await rig.epochId());
-            expect(state.initPrice).to.equal(await rig.initPrice());
-            expect(state.ups).to.equal(await rig.ups());
-            expect(state.miner).to.equal(await rig.miner());
+            expect(state.initPrice).to.equal(await rig.epochInitPrice());
+            expect(state.ups).to.equal(await rig.epochUps());
+            expect(state.miner).to.equal(await rig.epochMiner());
             expect(state.ethBalance).to.equal(await ethers.provider.getBalance(user1.address));
             expect(state.wethBalance).to.equal(await WETH.balanceOf(user1.address));
         });
@@ -472,8 +472,8 @@ describe("Comprehensive Security Tests", function () {
             await rig1.rig.connect(user1).mine(user1.address, 0, deadline, price1, "rig1");
             await rig2.rig.connect(user1).mine(user1.address, 0, deadline, price2, "rig2");
 
-            expect(await rig1.rig.miner()).to.equal(user1.address);
-            expect(await rig2.rig.miner()).to.equal(user1.address);
+            expect(await rig1.rig.epochMiner()).to.equal(user1.address);
+            expect(await rig2.rig.epochMiner()).to.equal(user1.address);
 
             // Both units are different tokens
             expect(rig1.unit.address).to.not.equal(rig2.unit.address);
@@ -857,7 +857,7 @@ describe("Comprehensive Security Tests", function () {
                 await WETH.connect(user1).approve(rig.address, price.add(convert("1", 18)));
                 await rig.connect(user1).mine(user1.address, i, deadline, price, uri);
 
-                const storedUri = await rig.uri();
+                const storedUri = await rig.epochUri();
                 expect(storedUri).to.equal(uri);
             }
         });

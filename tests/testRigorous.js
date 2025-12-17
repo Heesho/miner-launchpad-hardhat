@@ -30,10 +30,12 @@ async function launchFreshRig(launcher, params = {}) {
   await ensureDonut(launcher, convert("50", 18));
   const defaultParams = {
     launcher: launcher.address,
+    quoteToken: weth.address,
     tokenName: "Test Unit",
     tokenSymbol: "TUNIT",
-    unitUri: "",
+    uri: "",
     donutAmount: convert("10", 18),
+    unitAmount: convert("1000000", 18),
     initialUps: convert("4", 18),
     tailUps: convert("0.01", 18),
     halvingPeriod: 86400 * 30,
@@ -116,9 +118,7 @@ describe("Rigorous Tests", function () {
       donut.address,
       uniswapFactory.address,
       uniswapRouter.address,
-      weth.address,
       convert("5", 18),
-      convert("1000000", 18),
       unitFactory.address,
       rigFactory.address,
       auctionFactory.address
@@ -250,7 +250,7 @@ describe("Rigorous Tests", function () {
       const deadline = await getFutureDeadline();
       await rigContract.connect(user1).mine(user1.address, epochId, deadline, 0, "");
 
-      expect(await rigContract.miner()).to.equal(user1.address);
+      expect(await rigContract.epochMiner()).to.equal(user1.address);
     });
 
     it("Mining at exact halving boundary", async function () {
@@ -329,7 +329,7 @@ describe("Rigorous Tests", function () {
       const result = await launchFreshRig(user0, { rigEpochPeriod: 1000 });
       const rigContract = await ethers.getContractAt("Rig", result.rig);
 
-      const initPrice = await rigContract.initPrice();
+      const initPrice = await rigContract.epochInitPrice();
 
       // Fast forward 99% through epoch
       await network.provider.send("evm_increaseTime", [990]);
@@ -355,7 +355,7 @@ describe("Rigorous Tests", function () {
 
       // Should not revert with max deadline
       await rigContract.connect(user1).mine(user1.address, epochId, maxDeadline, price, "");
-      expect(await rigContract.miner()).to.equal(user1.address);
+      expect(await rigContract.epochMiner()).to.equal(user1.address);
     });
   });
 
@@ -378,7 +378,7 @@ describe("Rigorous Tests", function () {
 
       // Should work - ERC20 transfers don't have reentrancy issues like ETH
       await rigContract.connect(user1).mine(core.address, epochId, deadline, price, "");
-      expect(await rigContract.miner()).to.equal(core.address);
+      expect(await rigContract.epochMiner()).to.equal(core.address);
     });
 
     it("Fee distribution cannot be manipulated by recipient", async function () {
@@ -460,7 +460,7 @@ describe("Rigorous Tests", function () {
 
       // First mine
       await mineRig(result.rig, user1);
-      expect(await rigContract.miner()).to.equal(user1.address);
+      expect(await rigContract.epochMiner()).to.equal(user1.address);
       expect(await rigContract.epochId()).to.equal(1);
 
       // Wait and verify token accrual
@@ -500,8 +500,8 @@ describe("Rigorous Tests", function () {
       await mineRig(rig2.rig, user3);
 
       // Verify independent ownership
-      expect(await rig1Contract.miner()).to.equal(user2.address);
-      expect(await rig2Contract.miner()).to.equal(user3.address);
+      expect(await rig1Contract.epochMiner()).to.equal(user2.address);
+      expect(await rig2Contract.epochMiner()).to.equal(user3.address);
 
       // Wait and mine again
       await network.provider.send("evm_increaseTime", [30]);
@@ -542,7 +542,7 @@ describe("Rigorous Tests", function () {
 
       // Should still be able to mine
       await mineRig(result.rig, user2);
-      expect(await rigContract.miner()).to.equal(user2.address);
+      expect(await rigContract.epochMiner()).to.equal(user2.address);
     });
 
     it("Fee accumulation and distribution across many mines", async function () {

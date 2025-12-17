@@ -14,6 +14,7 @@ interface IWETH {
 
 /**
  * @title Multicall
+ * @author heesho
  * @notice Helper contract for batched operations and aggregated view functions.
  * @dev Provides ETH wrapping for mining and comprehensive state queries for Rigs and Auctions.
  */
@@ -41,8 +42,8 @@ contract Multicall {
         uint256 nextUps; // calculated current ups
         uint256 unitPrice; // Unit token price in DONUT
         address miner; // current miner
-        string uri; // metadata URI set by miner
-        string unitUri; // metadata URI for the unit token (set by owner)
+        string epochUri; // metadata URI set by miner
+        string rigUri; // metadata URI for the unit token (set by owner)
         uint256 ethBalance; // user's ETH balance
         uint256 wethBalance; // user's WETH balance
         uint256 donutBalance; // user's DONUT balance
@@ -88,16 +89,16 @@ contract Multicall {
      * @param epochId Expected epoch ID
      * @param deadline Transaction deadline
      * @param maxPrice Maximum price willing to pay
-     * @param uri Metadata URI for this mining action
+     * @param epochUri Metadata URI for this mining action
      */
-    function mine(address rig, uint256 epochId, uint256 deadline, uint256 maxPrice, string memory uri)
+    function mine(address rig, uint256 epochId, uint256 deadline, uint256 maxPrice, string memory epochUri)
         external
         payable
     {
         IWETH(weth).deposit{value: msg.value}();
         IERC20(weth).safeApprove(rig, 0);
         IERC20(weth).safeApprove(rig, msg.value);
-        IRig(rig).mine(msg.sender, epochId, deadline, maxPrice, uri);
+        IRig(rig).mine(msg.sender, epochId, deadline, maxPrice, epochUri);
 
         // Refund unused WETH
         uint256 wethBalance = IERC20(weth).balanceOf(address(this));
@@ -131,26 +132,29 @@ contract Multicall {
      * @notice Launch a new rig via Core.
      * @dev Transfers DONUT from caller, approves Core, and calls launch with caller as launcher.
      * @param params Launch parameters (launcher field is overwritten with msg.sender)
+     * @return unit Address of deployed Unit token
      * @return rig Address of deployed Rig contract
      * @return auction Address of deployed Auction contract
      * @return lpToken Address of Unit/DONUT LP token
      */
     function launch(ICore.LaunchParams calldata params)
         external
-        returns (address rig, address auction, address lpToken)
+        returns (address unit, address rig, address auction, address lpToken)
     {
         // Transfer DONUT from user
         IERC20(donut).safeTransferFrom(msg.sender, address(this), params.donutAmount);
         IERC20(donut).safeApprove(core, 0);
         IERC20(donut).safeApprove(core, params.donutAmount);
 
-        // Build params with msg.sender as launcher
+        // Build params with msg.sender as launcher and hardcoded WETH as quoteToken
         ICore.LaunchParams memory launchParams = ICore.LaunchParams({
             launcher: msg.sender,
+            quoteToken: weth,
             tokenName: params.tokenName,
             tokenSymbol: params.tokenSymbol,
-            unitUri: params.unitUri,
+            uri: params.uri,
             donutAmount: params.donutAmount,
+            unitAmount: params.unitAmount,
             initialUps: params.initialUps,
             tailUps: params.tailUps,
             halvingPeriod: params.halvingPeriod,
@@ -176,15 +180,15 @@ contract Multicall {
      */
     function getRig(address rig, address account) external view returns (RigState memory state) {
         state.epochId = IRig(rig).epochId();
-        state.initPrice = IRig(rig).initPrice();
+        state.initPrice = IRig(rig).epochInitPrice();
         state.epochStartTime = IRig(rig).epochStartTime();
-        state.ups = IRig(rig).ups();
+        state.ups = IRig(rig).epochUps();
         state.glazed = state.ups * (block.timestamp - state.epochStartTime);
         state.price = IRig(rig).getPrice();
         state.nextUps = IRig(rig).getUps();
-        state.miner = IRig(rig).miner();
-        state.uri = IRig(rig).uri();
-        state.unitUri = IRig(rig).unitUri();
+        state.miner = IRig(rig).epochMiner();
+        state.epochUri = IRig(rig).epochUri();
+        state.rigUri = IRig(rig).uri();
 
         address unitToken = IRig(rig).unit();
         address auction = ICore(core).rigToAuction(rig);

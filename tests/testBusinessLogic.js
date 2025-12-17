@@ -25,10 +25,12 @@ async function launchFreshRig(launcher, params = {}) {
   await ensureDonut(launcher, convert("20", 18));
   const defaultParams = {
     launcher: launcher.address,
+    quoteToken: weth.address,
     tokenName: "Test Unit",
     tokenSymbol: "TUNIT",
-    unitUri: "",
+    uri: "",
     donutAmount: convert("10", 18), // Reduced for testing
+    unitAmount: convert("1000000", 18),
     initialUps: convert("4", 18),
     tailUps: convert("0.01", 18),
     halvingPeriod: 86400 * 30,
@@ -117,9 +119,7 @@ describe("Business Logic Tests", function () {
       donut.address,
       uniswapFactory.address,
       uniswapRouter.address,
-      weth.address,
       convert("5", 18), // minDonutForLaunch (reduced for testing)
-      convert("1000000", 18),
       unitFactory.address,
       rigFactory.address,
       auctionFactory.address
@@ -149,7 +149,7 @@ describe("Business Logic Tests", function () {
   describe("Rig Dutch Auction Price Mechanics", function () {
     it("Price starts at initPrice at epoch start", async function () {
       const rigContract = await ethers.getContractAt("Rig", rig);
-      const initPrice = await rigContract.initPrice();
+      const initPrice = await rigContract.epochInitPrice();
       const currentPrice = await rigContract.getPrice();
 
       // Price should be close to initPrice (some time may have passed)
@@ -161,7 +161,7 @@ describe("Business Logic Tests", function () {
       const result = await launchFreshRig(user1, { rigEpochPeriod: 3600 });
       const rigContract = await ethers.getContractAt("Rig", result.rig);
 
-      const initPrice = await rigContract.initPrice();
+      const initPrice = await rigContract.epochInitPrice();
       const epochPeriod = await rigContract.epochPeriod();
 
       // Check price at 25% through epoch
@@ -219,7 +219,7 @@ describe("Business Logic Tests", function () {
         .connect(user1)
         .mine(user1.address, epochId, deadline, 0, "");
 
-      expect(await rigContract.miner()).to.equal(user1.address);
+      expect(await rigContract.epochMiner()).to.equal(user1.address);
     });
 
     it("Price multiplier correctly sets next epoch price", async function () {
@@ -230,7 +230,7 @@ describe("Business Logic Tests", function () {
       const rigContract = await ethers.getContractAt("Rig", result.rig);
 
       // Get initial price and mine
-      const initPriceBefore = await rigContract.initPrice();
+      const initPriceBefore = await rigContract.epochInitPrice();
 
       await weth.connect(user1).deposit({ value: convert("1", 18) });
       await weth.connect(user1).approve(result.rig, convert("1", 18));
@@ -244,7 +244,7 @@ describe("Business Logic Tests", function () {
         .mine(user1.address, epochId, deadline, pricePaid, "");
 
       // New initPrice should be pricePaid * 2 (multiplier)
-      const initPriceAfter = await rigContract.initPrice();
+      const initPriceAfter = await rigContract.epochInitPrice();
       const expectedPrice = pricePaid.mul(convert("2", 18)).div(convert("1", 18));
 
       // Check if it's either the calculated price or minInitPrice (whichever is higher)
@@ -276,7 +276,7 @@ describe("Business Logic Tests", function () {
         .mine(user1.address, epochId, deadline, 0, "");
 
       // New initPrice should be minInitPrice (since 0 * multiplier < minInitPrice)
-      const initPrice = await rigContract.initPrice();
+      const initPrice = await rigContract.epochInitPrice();
       const minInitPrice = await rigContract.minInitPrice();
       expect(initPrice).to.equal(minInitPrice);
     });
@@ -381,7 +381,7 @@ describe("Business Logic Tests", function () {
 
       // Treasury should get 15% + 4% (team fee) = 19% = 1900 bps
       const epochId = await rigContract.epochId();
-      const initPrice = await rigContract.initPrice();
+      const initPrice = await rigContract.epochInitPrice();
       // Price was set after the mine, so we need to calculate what was paid
       // treasuryReceived should be ~19% of the price paid
       // Since previous miner gets 80% and protocol gets 1%, treasury gets remaining 19%
@@ -403,7 +403,7 @@ describe("Business Logic Tests", function () {
         .connect(user1)
         .mine(user3.address, epochId, deadline, price, "");
 
-      expect(await rigContract.miner()).to.equal(user3.address);
+      expect(await rigContract.epochMiner()).to.equal(user3.address);
     });
 
     it("Previous rig holder receives minted Unit tokens", async function () {
@@ -895,10 +895,12 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
+          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
-          unitUri: "",
+          uri: "",
           donutAmount: convert("10", 18),
+          unitAmount: convert("1000000", 18),
           initialUps: 0, // Invalid
           tailUps: convert("0.01", 18),
           halvingPeriod: 86400,
@@ -910,7 +912,7 @@ describe("Business Logic Tests", function () {
           auctionPriceMultiplier: convert("1.2", 18),
           auctionMinInitPrice: convert("0.001", 18),
         })
-      ).to.be.revertedWith("Core__InvalidInitialUps()");
+      ).to.be.revertedWith("Rig__InvalidInitialUps()");
     });
 
     it("Reverts with zero tailUps", async function () {
@@ -919,10 +921,12 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
+          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
-          unitUri: "",
+          uri: "",
           donutAmount: convert("10", 18),
+          unitAmount: convert("1000000", 18),
           initialUps: convert("4", 18),
           tailUps: 0, // Invalid
           halvingPeriod: 86400,
@@ -934,7 +938,7 @@ describe("Business Logic Tests", function () {
           auctionPriceMultiplier: convert("1.2", 18),
           auctionMinInitPrice: convert("0.001", 18),
         })
-      ).to.be.revertedWith("Core__InvalidTailUps()");
+      ).to.be.revertedWith("Rig__InvalidTailUps()");
     });
 
     it("Reverts when tailUps > initialUps", async function () {
@@ -943,10 +947,12 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
+          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
-          unitUri: "",
+          uri: "",
           donutAmount: convert("10", 18),
+          unitAmount: convert("1000000", 18),
           initialUps: convert("1", 18),
           tailUps: convert("2", 18), // tailUps > initialUps
           halvingPeriod: 86400,
@@ -958,7 +964,7 @@ describe("Business Logic Tests", function () {
           auctionPriceMultiplier: convert("1.2", 18),
           auctionMinInitPrice: convert("0.001", 18),
         })
-      ).to.be.revertedWith("Core__InvalidTailUps()");
+      ).to.be.revertedWith("Rig__InvalidTailUps()");
     });
 
     it("Reverts with zero halvingPeriod", async function () {
@@ -967,10 +973,12 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
+          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
-          unitUri: "",
+          uri: "",
           donutAmount: convert("10", 18),
+          unitAmount: convert("1000000", 18),
           initialUps: convert("4", 18),
           tailUps: convert("0.01", 18),
           halvingPeriod: 0, // Invalid
@@ -982,7 +990,7 @@ describe("Business Logic Tests", function () {
           auctionPriceMultiplier: convert("1.2", 18),
           auctionMinInitPrice: convert("0.001", 18),
         })
-      ).to.be.revertedWith("Core__InvalidHalvingPeriod()");
+      ).to.be.revertedWith("Rig__InvalidHalvingPeriod()");
     });
 
     it("Reverts with empty token symbol", async function () {
@@ -991,10 +999,12 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
+          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "", // Invalid
-          unitUri: "",
+          uri: "",
           donutAmount: convert("10", 18),
+          unitAmount: convert("1000000", 18),
           initialUps: convert("4", 18),
           tailUps: convert("0.01", 18),
           halvingPeriod: 86400,
@@ -1007,18 +1017,6 @@ describe("Business Logic Tests", function () {
           auctionMinInitPrice: convert("0.001", 18),
         })
       ).to.be.revertedWith("Core__EmptyTokenSymbol()");
-    });
-
-    it("Cannot set zero protocol fee address", async function () {
-      await expect(core.connect(owner).setProtocolFeeAddress(AddressZero)).to.be.revertedWith(
-        "Core__InvalidProtocolFeeAddress()"
-      );
-    });
-
-    it("Cannot set zero initial unit mint amount", async function () {
-      await expect(core.connect(owner).setInitialUnitMintAmount(0)).to.be.revertedWith(
-        "Core__InvalidInitialUnitMintAmount()"
-      );
     });
 
     it("Multiple rigs can be launched", async function () {
@@ -1070,7 +1068,7 @@ describe("Business Logic Tests", function () {
         value: price.mul(2),
       });
 
-      expect(await rigContract.miner()).to.equal(user1.address);
+      expect(await rigContract.epochMiner()).to.equal(user1.address);
     });
 
     it("Multicall refunds excess ETH as WETH", async function () {
@@ -1184,10 +1182,12 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
+          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
-          unitUri: "",
+          uri: "",
           donutAmount: convert("10", 18),
+          unitAmount: convert("1000000", 18),
           initialUps: convert("4", 18),
           tailUps: convert("0.01", 18),
           halvingPeriod: 86400,
@@ -1208,10 +1208,12 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
+          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
-          unitUri: "",
+          uri: "",
           donutAmount: convert("10", 18),
+          unitAmount: convert("1000000", 18),
           initialUps: convert("4", 18),
           tailUps: convert("0.01", 18),
           halvingPeriod: 86400,
@@ -1232,10 +1234,12 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
+          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
-          unitUri: "",
+          uri: "",
           donutAmount: convert("10", 18),
+          unitAmount: convert("1000000", 18),
           initialUps: convert("4", 18),
           tailUps: convert("0.01", 18),
           halvingPeriod: 86400,
@@ -1256,10 +1260,12 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
+          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
-          unitUri: "",
+          uri: "",
           donutAmount: convert("10", 18),
+          unitAmount: convert("1000000", 18),
           initialUps: convert("4", 18),
           tailUps: convert("0.01", 18),
           halvingPeriod: 86400,
@@ -1285,10 +1291,12 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
+          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
-          unitUri: "",
+          uri: "",
           donutAmount: convert("10", 18),
+          unitAmount: convert("1000000", 18),
           initialUps: convert("4", 18),
           tailUps: convert("0.01", 18),
           halvingPeriod: 86400,
@@ -1309,10 +1317,12 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
+          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
-          unitUri: "",
+          uri: "",
           donutAmount: convert("10", 18),
+          unitAmount: convert("1000000", 18),
           initialUps: convert("4", 18),
           tailUps: convert("0.01", 18),
           halvingPeriod: 86400,
@@ -1333,10 +1343,12 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
+          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
-          unitUri: "",
+          uri: "",
           donutAmount: convert("10", 18),
+          unitAmount: convert("1000000", 18),
           initialUps: convert("4", 18),
           tailUps: convert("0.01", 18),
           halvingPeriod: 86400,
@@ -1357,10 +1369,12 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
+          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
-          unitUri: "",
+          uri: "",
           donutAmount: convert("10", 18),
+          unitAmount: convert("1000000", 18),
           initialUps: convert("4", 18),
           tailUps: convert("0.01", 18),
           halvingPeriod: 86400,
@@ -1381,10 +1395,12 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
+          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
-          unitUri: "",
+          uri: "",
           donutAmount: convert("10", 18),
+          unitAmount: convert("1000000", 18),
           initialUps: convert("4", 18),
           tailUps: convert("0.01", 18),
           halvingPeriod: 86400,
@@ -1405,10 +1421,12 @@ describe("Business Logic Tests", function () {
       // Should not revert with exact minimum values
       const tx = await core.connect(user1).launch({
         launcher: user1.address,
+        quoteToken: weth.address,
         tokenName: "Boundary Test",
         tokenSymbol: "BNDRY",
-        unitUri: "",
+        uri: "",
         donutAmount: convert("10", 18),
+        unitAmount: convert("1000000", 18),
         initialUps: convert("4", 18),
         tailUps: convert("0.01", 18),
         halvingPeriod: 86400,
@@ -1431,10 +1449,12 @@ describe("Business Logic Tests", function () {
       // Should not revert with exact maximum values
       const tx = await core.connect(user1).launch({
         launcher: user1.address,
+        quoteToken: weth.address,
         tokenName: "Max Boundary Test",
         tokenSymbol: "MAXB",
-        unitUri: "",
+        uri: "",
         donutAmount: convert("10", 18),
+        unitAmount: convert("1000000", 18),
         initialUps: convert("4", 18),
         tailUps: convert("0.01", 18),
         halvingPeriod: 86400,
@@ -1464,7 +1484,7 @@ describe("Business Logic Tests", function () {
       const users = [user1, user2, user3, user4, user0];
       for (let i = 0; i < users.length; i++) {
         await mineRig(result.rig, users[i]);
-        expect(await rigContract.miner()).to.equal(users[i].address);
+        expect(await rigContract.epochMiner()).to.equal(users[i].address);
         expect(await rigContract.epochId()).to.equal(i + 1);
       }
     });
@@ -1483,7 +1503,7 @@ describe("Business Logic Tests", function () {
 
       // Mining should still work
       await mineRig(result.rig, user1);
-      expect(await rigContract.miner()).to.equal(user1.address);
+      expect(await rigContract.epochMiner()).to.equal(user1.address);
 
       // UPS should be at tailUps
       const ups = await rigContract.getUps();

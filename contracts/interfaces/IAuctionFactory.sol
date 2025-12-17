@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 /**
  * @title IAuctionFactory
+ * @author heesho
  * @notice Interface for the AuctionFactory contract.
  */
 interface IAuctionFactory {

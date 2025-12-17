@@ -5,6 +5,7 @@ import {Rig} from "./Rig.sol";
 
 /**
  * @title RigFactory
+ * @author heesho
  * @notice Factory contract for deploying new Rig instances.
  * @dev Called by Core during the launch process to create new Rig contracts.
  */
@@ -16,7 +17,7 @@ contract RigFactory {
      * @param _treasury Treasury address for fee collection
      * @param _team Team address for fee collection
      * @param _core Core contract address
-     * @param _unitUri Metadata URI for the unit token
+     * @param _uri Metadata URI for the rig
      * @param _initialUps Starting units per second
      * @param _tailUps Minimum units per second
      * @param _halvingPeriod Time between halvings
@@ -31,7 +32,7 @@ contract RigFactory {
         address _treasury,
         address _team,
         address _core,
-        string memory _unitUri,
+        string memory _uri,
         uint256 _initialUps,
         uint256 _tailUps,
         uint256 _halvingPeriod,
@@ -45,7 +46,7 @@ contract RigFactory {
             _treasury,
             _team,
             _core,
-            _unitUri,
+            _uri,
             _initialUps,
             _tailUps,
             _halvingPeriod,

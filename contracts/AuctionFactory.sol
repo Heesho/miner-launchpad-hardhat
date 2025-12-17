@@ -5,6 +5,7 @@ import {Auction} from "./Auction.sol";
 
 /**
  * @title AuctionFactory
+ * @author heesho
  * @notice Factory contract for deploying new Auction instances.
  * @dev Called by Core during the launch process to create new Auction contracts.
  */

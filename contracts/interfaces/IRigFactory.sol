@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 /**
  * @title IRigFactory
+ * @author heesho
  * @notice Interface for the RigFactory contract.
  */
 interface IRigFactory {
@@ -12,7 +13,7 @@ interface IRigFactory {
         address _treasury,
         address _team,
         address _core,
-        string memory _unitUri,
+        string memory _uri,
         uint256 _initialUps,
         uint256 _tailUps,
         uint256 _halvingPeriod,

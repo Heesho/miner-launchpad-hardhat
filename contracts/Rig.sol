@@ -10,6 +10,7 @@ import {ICore} from "./interfaces/ICore.sol";
 
 /**
  * @title Rig
+ * @author heesho
  * @notice A mining rig contract that implements a Dutch auction mechanism for mining Unit tokens.
  *         Users compete to become the current rig owner by paying a decaying price. The previous
  *         rig owner receives minted Unit tokens proportional to their holding time, plus a share
@@ -22,7 +23,6 @@ contract Rig is Ownable, ReentrancyGuard {
     /*----------  CONSTANTS  --------------------------------------------*/
 
     uint256 public constant PREVIOUS_MINER_FEE = 8_000; // 80% to previous miner
-    uint256 public constant TREASURY_FEE = 1_500; // 15% to treasury
     uint256 public constant TEAM_FEE = 400; // 4% to team
     uint256 public constant PROTOCOL_FEE = 100; // 1% to protocol
     uint256 public constant DIVISOR = 10_000; // fee divisor (basis points)
@@ -34,7 +34,7 @@ contract Rig is Ownable, ReentrancyGuard {
     uint256 public constant MIN_PRICE_MULTIPLIER = 1.1e18; // Should at least be 110% of settlement price
     uint256 public constant MAX_PRICE_MULTIPLIER = 3e18; // Should not exceed 300% of settlement price
     uint256 public constant ABS_MIN_INIT_PRICE = 1e6; // Minimum sane value for init price
-    uint256 public constant ABS_MAX_INIT_PRICE = type(uint192).max; // chosen so that initPrice * priceMultiplier does not exceed uint256
+    uint256 public constant ABS_MAX_INIT_PRICE = type(uint192).max; // chosen so that epochInitPrice * priceMultiplier does not exceed uint256
 
     /*----------  IMMUTABLES  -------------------------------------------*/
 
@@ -52,17 +52,17 @@ contract Rig is Ownable, ReentrancyGuard {
 
     /*----------  STATE  ------------------------------------------------*/
 
-    uint256 public epochId; // current epoch counter
-    uint256 public initPrice; // starting price for current epoch
-    uint256 public epochStartTime; // timestamp when current epoch began
-    uint256 public ups; // current units per second rate
+    uint256 public epochId; // current epoch id
+    uint256 public epochInitPrice; // current epoch starting price
+    uint256 public epochStartTime; // current epoch start timestamp
+    uint256 public epochUps; // current epoch units per second
 
-    address public miner; // address receiving minted tokens
-    address public treasury; // treasury fee recipient
-    address public team; // team fee recipient
+    address public epochMiner; // current epoch miner
+    address public treasury; // treasury address
+    address public team; // team address
 
-    string public uri; // metadata URI set by current miner
-    string public unitUri; // metadata URI for the unit token (set by owner)
+    string public epochUri; // current epoch miner uri
+    string public uri; // rig uri
 
     /*----------  ERRORS  -----------------------------------------------*/
 
@@ -75,6 +75,9 @@ contract Rig is Ownable, ReentrancyGuard {
     error Rig__MinInitPriceAboveAbsoluteMax();
     error Rig__EpochPeriodOutOfRange();
     error Rig__PriceMultiplierOutOfRange();
+    error Rig__InvalidInitialUps();
+    error Rig__InvalidTailUps();
+    error Rig__InvalidHalvingPeriod();
 
     /*----------  EVENTS  -----------------------------------------------*/
 
@@ -86,7 +89,7 @@ contract Rig is Ownable, ReentrancyGuard {
     event Rig__ProtocolFee(address indexed protocol, uint256 amount);
     event Rig__TreasurySet(address indexed treasury);
     event Rig__TeamSet(address indexed team);
-    event Rig__UnitUriSet(string uri);
+    event Rig__UriSet(string uri);
 
     /*----------  CONSTRUCTOR  ------------------------------------------*/
 
@@ -97,7 +100,7 @@ contract Rig is Ownable, ReentrancyGuard {
      * @param _treasury Initial treasury address for fee collection
      * @param _team Team address for fee collection
      * @param _core Core contract address for protocol fee lookups
-     * @param _unitUri Metadata URI for the unit token
+     * @param _uri Metadata URI for the rig
      * @param _initialUps Starting units per second emission rate
      * @param _tailUps Minimum units per second after halvings
      * @param _halvingPeriod Time between emission halvings
@@ -111,7 +114,7 @@ contract Rig is Ownable, ReentrancyGuard {
         address _treasury,
         address _team,
         address _core,
-        string memory _unitUri,
+        string memory _uri,
         uint256 _initialUps,
         uint256 _tailUps,
         uint256 _halvingPeriod,
@@ -120,17 +123,22 @@ contract Rig is Ownable, ReentrancyGuard {
         uint256 _minInitPrice
     ) {
         if (_treasury == address(0)) revert Rig__InvalidTreasury();
+        if (_initialUps == 0) revert Rig__InvalidInitialUps();
+        if (_tailUps == 0 || _tailUps > _initialUps) revert Rig__InvalidTailUps();
+        if (_halvingPeriod == 0) revert Rig__InvalidHalvingPeriod();
         if (_minInitPrice < ABS_MIN_INIT_PRICE) revert Rig__MinInitPriceBelowAbsoluteMin();
         if (_minInitPrice > ABS_MAX_INIT_PRICE) revert Rig__MinInitPriceAboveAbsoluteMax();
         if (_epochPeriod < MIN_EPOCH_PERIOD || _epochPeriod > MAX_EPOCH_PERIOD) revert Rig__EpochPeriodOutOfRange();
-        if (_priceMultiplier < MIN_PRICE_MULTIPLIER || _priceMultiplier > MAX_PRICE_MULTIPLIER) revert Rig__PriceMultiplierOutOfRange();
+        if (_priceMultiplier < MIN_PRICE_MULTIPLIER || _priceMultiplier > MAX_PRICE_MULTIPLIER) {
+            revert Rig__PriceMultiplierOutOfRange();
+        }
 
         unit = _unit;
         quote = _quote;
         treasury = _treasury;
         team = _team;
         core = _core;
-        unitUri = _unitUri;
+        uri = _uri;
         startTime = block.timestamp;
 
         initialUps = _initialUps;
@@ -140,10 +148,10 @@ contract Rig is Ownable, ReentrancyGuard {
         priceMultiplier = _priceMultiplier;
         minInitPrice = _minInitPrice;
 
-        initPrice = _minInitPrice;
+        epochInitPrice = _minInitPrice;
         epochStartTime = block.timestamp;
-        miner = _team;
-        ups = _initialUps;
+        epochMiner = _team;
+        epochUps = _initialUps;
     }
 
     /*----------  EXTERNAL FUNCTIONS  -----------------------------------*/
@@ -152,19 +160,19 @@ contract Rig is Ownable, ReentrancyGuard {
      * @notice Mine the rig by paying the current Dutch auction price.
      * @dev Transfers payment to fee recipients, mints Unit tokens to previous holder,
      *      and sets the caller as the new miner.
-     * @param _miner Address to set as new miner (receives future minted tokens)
+     * @param miner Address to set as new miner (receives future minted tokens)
      * @param _epochId Expected epoch ID (reverts if mismatched for frontrun protection)
      * @param deadline Transaction deadline timestamp
      * @param maxPrice Maximum price willing to pay (slippage protection)
-     * @param _uri Metadata URI for this mining action
+     * @param _epochUri Metadata URI for this mining action
      * @return price Actual price paid
      */
-    function mine(address _miner, uint256 _epochId, uint256 deadline, uint256 maxPrice, string memory _uri)
+    function mine(address miner, uint256 _epochId, uint256 deadline, uint256 maxPrice, string memory _epochUri)
         external
         nonReentrant
         returns (uint256 price)
     {
-        if (_miner == address(0)) revert Rig__InvalidMiner();
+        if (miner == address(0)) revert Rig__InvalidMiner();
         if (block.timestamp > deadline) revert Rig__Expired();
         if (_epochId != epochId) revert Rig__EpochIdMismatch();
 
@@ -182,8 +190,8 @@ contract Rig is Ownable, ReentrancyGuard {
             uint256 treasuryAmount = price - previousMinerAmount - teamAmount - protocolAmount;
 
             // Previous miner always gets paid
-            IERC20(quote).safeTransferFrom(msg.sender, miner, previousMinerAmount);
-            emit Rig__PreviousMinerFee(miner, previousMinerAmount);
+            IERC20(quote).safeTransferFrom(msg.sender, epochMiner, previousMinerAmount);
+            emit Rig__PreviousMinerFee(epochMiner, previousMinerAmount);
 
             // Treasury gets base fee + any unclaimed team/protocol fees
             IERC20(quote).safeTransferFrom(msg.sender, treasury, treasuryAmount);
@@ -212,22 +220,22 @@ contract Rig is Ownable, ReentrancyGuard {
 
         // Mint tokens to previous rig holder based on holding time
         uint256 mineTime = block.timestamp - epochStartTime;
-        uint256 minedAmount = mineTime * ups;
+        uint256 minedAmount = mineTime * epochUps;
 
-        IUnit(unit).mint(miner, minedAmount);
-        emit Rig__Minted(miner, minedAmount);
+        IUnit(unit).mint(epochMiner, minedAmount);
+        emit Rig__Minted(epochMiner, minedAmount);
 
         // Update state for new epoch
         unchecked {
             epochId++;
         }
-        initPrice = newInitPrice;
+        epochInitPrice = newInitPrice;
         epochStartTime = block.timestamp;
-        miner = _miner;
-        ups = _getUpsFromTime(block.timestamp);
-        uri = _uri;
+        epochMiner = miner;
+        epochUps = _getUpsFromTime(block.timestamp);
+        epochUri = _epochUri;
 
-        emit Rig__Mined(msg.sender, _miner, price, _uri);
+        emit Rig__Mined(msg.sender, miner, price, _epochUri);
 
         return price;
     }
@@ -255,25 +263,25 @@ contract Rig is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Update the unit metadata URI.
+     * @notice Update the metadata URI.
      * @dev Used to set metadata like the unit logo image.
-     * @param _unitUri New metadata URI
+     * @param _uri New metadata URI
      */
-    function setUnitUri(string memory _unitUri) external onlyOwner {
-        unitUri = _unitUri;
-        emit Rig__UnitUriSet(_unitUri);
+    function setUri(string memory _uri) external onlyOwner {
+        uri = _uri;
+        emit Rig__UriSet(_uri);
     }
 
     /*----------  VIEW FUNCTIONS  ---------------------------------------*/
 
     /**
      * @notice Get the current Dutch auction price.
-     * @return Current price (linearly decays from initPrice to 0 over epochPeriod)
+     * @return Current price (linearly decays from epochInitPrice to 0 over epochPeriod)
      */
     function getPrice() public view returns (uint256) {
         uint256 timePassed = block.timestamp - epochStartTime;
         if (timePassed > epochPeriod) return 0;
-        return initPrice - initPrice * timePassed / epochPeriod;
+        return epochInitPrice - epochInitPrice * timePassed / epochPeriod;
     }
 
     /**
@@ -287,34 +295,10 @@ contract Rig is Ownable, ReentrancyGuard {
     /**
      * @dev Calculate UPS at a given timestamp based on halving schedule.
      */
-    function _getUpsFromTime(uint256 time) internal view returns (uint256 _ups) {
+    function _getUpsFromTime(uint256 time) internal view returns (uint256 ups) {
         uint256 halvings = time <= startTime ? 0 : (time - startTime) / halvingPeriod;
-        _ups = initialUps >> halvings;
-        if (_ups < tailUps) _ups = tailUps;
-        return _ups;
-    }
-
-    function getEpochId() external view returns (uint256) {
-        return epochId;
-    }
-
-    function getInitPrice() external view returns (uint256) {
-        return initPrice;
-    }
-
-    function getEpochStartTime() external view returns (uint256) {
-        return epochStartTime;
-    }
-
-    function getMiner() external view returns (address) {
-        return miner;
-    }
-
-    function getUri() external view returns (string memory) {
-        return uri;
-    }
-
-    function getUnitUri() external view returns (string memory) {
-        return unitUri;
+        ups = initialUps >> halvings;
+        if (ups < tailUps) ups = tailUps;
+        return ups;
     }
 }

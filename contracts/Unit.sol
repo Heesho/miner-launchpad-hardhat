@@ -7,6 +7,7 @@ import {ERC20Votes} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Vo
 
 /**
  * @title Unit
+ * @author heesho
  * @notice ERC20 token with permit and voting capabilities, minted by a Rig contract.
  * @dev Only the rig address can mint new tokens. Includes governance voting functionality.
  *      The rig address can be transferred once by calling setRig(). Once transferred to a
