@@ -146,10 +146,9 @@ contract Multicall {
         IERC20(donut).safeApprove(core, 0);
         IERC20(donut).safeApprove(core, params.donutAmount);
 
-        // Build params with msg.sender as launcher and hardcoded WETH as quoteToken
+        // Build params with msg.sender as launcher
         ICore.LaunchParams memory launchParams = ICore.LaunchParams({
             launcher: msg.sender,
-            quoteToken: weth,
             tokenName: params.tokenName,
             tokenSymbol: params.tokenSymbol,
             uri: params.uri,

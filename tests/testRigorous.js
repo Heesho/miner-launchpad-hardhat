@@ -30,7 +30,6 @@ async function launchFreshRig(launcher, params = {}) {
   await ensureDonut(launcher, convert("50", 18));
   const defaultParams = {
     launcher: launcher.address,
-    quoteToken: weth.address,
     tokenName: "Test Unit",
     tokenSymbol: "TUNIT",
     uri: "",
@@ -114,14 +113,15 @@ describe("Rigorous Tests", function () {
     // Deploy Core
     const coreArtifact = await ethers.getContractFactory("Core");
     core = await coreArtifact.deploy(
-      protocol.address,
+      weth.address,
       donut.address,
       uniswapFactory.address,
       uniswapRouter.address,
-      convert("5", 18),
       unitFactory.address,
       rigFactory.address,
-      auctionFactory.address
+      auctionFactory.address,
+      protocol.address,
+      convert("5", 18)
     );
 
     // Deploy Multicall

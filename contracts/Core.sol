@@ -35,6 +35,7 @@ contract Core is Ownable, ReentrancyGuard {
 
     /*----------  IMMUTABLES  -------------------------------------------*/
 
+    address public immutable weth; // WETH token (quote token for all rigs)
     address public immutable donutToken; // token required to launch
     address public immutable uniswapV2Factory; // Uniswap V2 factory
     address public immutable uniswapV2Router; // Uniswap V2 router
@@ -61,7 +62,6 @@ contract Core is Ownable, ReentrancyGuard {
      */
     struct LaunchParams {
         address launcher; // address to receive Rig ownership, team fees, and initial miner
-        address quoteToken; // payment token for rig mining (e.g., WETH)
         string tokenName; // Unit token name
         string tokenSymbol; // Unit token symbol
         string uri; // metadata URI for the unit token
@@ -95,7 +95,6 @@ contract Core is Ownable, ReentrancyGuard {
         address rig,
         address auction,
         address lpToken,
-        address quoteToken,
         string tokenName,
         string tokenSymbol,
         string uri,
@@ -119,33 +118,36 @@ contract Core is Ownable, ReentrancyGuard {
 
     /**
      * @notice Deploy the Core launchpad contract.
-     * @param _protocolFeeAddress Address to receive protocol fees
+     * @param _weth WETH token address (quote token for all rigs)
      * @param _donutToken DONUT token address
      * @param _uniswapV2Factory Uniswap V2 factory address
      * @param _uniswapV2Router Uniswap V2 router address
-     * @param _minDonutForLaunch Minimum DONUT required to launch
      * @param _unitFactory UnitFactory contract address
      * @param _rigFactory RigFactory contract address
      * @param _auctionFactory AuctionFactory contract address
+     * @param _protocolFeeAddress Address to receive protocol fees
+     * @param _minDonutForLaunch Minimum DONUT required to launch
      */
     constructor(
-        address _protocolFeeAddress,
+        address _weth,
         address _donutToken,
         address _uniswapV2Factory,
         address _uniswapV2Router,
-        uint256 _minDonutForLaunch,
         address _unitFactory,
         address _rigFactory,
-        address _auctionFactory
+        address _auctionFactory,
+        address _protocolFeeAddress,
+        uint256 _minDonutForLaunch
     ) {
-        protocolFeeAddress = _protocolFeeAddress;
+        weth = _weth;
         donutToken = _donutToken;
         uniswapV2Factory = _uniswapV2Factory;
         uniswapV2Router = _uniswapV2Router;
-        minDonutForLaunch = _minDonutForLaunch;
         unitFactory = _unitFactory;
         rigFactory = _rigFactory;
         auctionFactory = _auctionFactory;
+        protocolFeeAddress = _protocolFeeAddress;
+        minDonutForLaunch = _minDonutForLaunch;
     }
 
     /*----------  EXTERNAL FUNCTIONS  -----------------------------------*/
@@ -212,7 +214,7 @@ contract Core is Ownable, ReentrancyGuard {
         // Deploy Rig via factory
         rig = IRigFactory(rigFactory).deploy(
             unit,
-            params.quoteToken,
+            weth,
             auction,
             params.launcher,
             address(this),
@@ -245,7 +247,6 @@ contract Core is Ownable, ReentrancyGuard {
             rig,
             auction,
             lpToken,
-            params.quoteToken,
             params.tokenName,
             params.tokenSymbol,
             params.uri,

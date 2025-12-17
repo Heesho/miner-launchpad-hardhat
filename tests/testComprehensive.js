@@ -66,14 +66,15 @@ describe("Comprehensive Security Tests", function () {
 
         const Core = await ethers.getContractFactory("Core");
         core = await Core.deploy(
-            owner.address,
+            WETH.address,
             DONUT.address,
             uniFactory.address,
             uniRouter.address,
-            convert("100", 18),
             unitFactory.address,
             rigFactory.address,
-            auctionFactory.address
+            auctionFactory.address,
+            owner.address,
+            convert("100", 18)
         );
         await core.deployed();
 
@@ -91,7 +92,6 @@ describe("Comprehensive Security Tests", function () {
     async function launchRig(launcher, options = {}) {
         const defaults = {
             launcher: launcher.address,
-            quoteToken: WETH.address,
             tokenName: "Test Unit",
             tokenSymbol: "TUNIT",
             uri: "",

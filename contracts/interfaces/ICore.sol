@@ -9,7 +9,6 @@ pragma solidity 0.8.19;
 interface ICore {
     struct LaunchParams {
         address launcher;
-        address quoteToken;
         string tokenName;
         string tokenSymbol;
         string uri;
@@ -31,6 +30,7 @@ interface ICore {
         external
         returns (address unit, address rig, address auction, address lpToken);
     function protocolFeeAddress() external view returns (address);
+    function weth() external view returns (address);
     function donutToken() external view returns (address);
     function uniswapV2Factory() external view returns (address);
     function uniswapV2Router() external view returns (address);

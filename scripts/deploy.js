@@ -19,7 +19,6 @@ const UNISWAP_V2_ROUTER = "0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24";
 // Protocol settings
 const PROTOCOL_FEE_ADDRESS = "0x7a8C895E7826F66e1094532cB435Da725dc3868f"; // TODO: Set protocol fee recipient
 const MIN_DONUT_FOR_LAUNCH = convert("1", 18); // 1 DONUT minimum
-const INITIAL_UNIT_MINT_AMOUNT = convert("100", 18); // 100 UNIT tokens for LP
 
 // Deployed Contract Addresses (paste after deployment)
 const UNIT_FACTORY = "0xa99c32Dc734e0CE1E2D8a2ceb566a9690C0c4850";
@@ -114,16 +113,15 @@ async function deployCore() {
 
   const artifact = await ethers.getContractFactory("Core");
   const contract = await artifact.deploy(
-    PROTOCOL_FEE_ADDRESS,
+    WETH_ADDRESS,
     DONUT_ADDRESS,
     UNISWAP_V2_FACTORY,
     UNISWAP_V2_ROUTER,
-    WETH_ADDRESS,
-    MIN_DONUT_FOR_LAUNCH,
-    INITIAL_UNIT_MINT_AMOUNT,
     unitFactory.address,
     rigFactory.address,
     auctionFactory.address,
+    PROTOCOL_FEE_ADDRESS,
+    MIN_DONUT_FOR_LAUNCH,
     { gasPrice: ethers.gasPrice }
   );
   core = await contract.deployed();
@@ -154,7 +152,7 @@ async function deployMulticall() {
 async function verifyUnitFactory() {
   console.log("Starting UnitFactory Verification");
   await hre.run("verify:verify", {
-    address: unitFactory.address,
+    address: unitFactory?.address || UNIT_FACTORY,
     contract: "contracts/UnitFactory.sol:UnitFactory",
     constructorArguments: [],
   });
@@ -164,7 +162,7 @@ async function verifyUnitFactory() {
 async function verifyRigFactory() {
   console.log("Starting RigFactory Verification");
   await hre.run("verify:verify", {
-    address: rigFactory.address,
+    address: rigFactory?.address || RIG_FACTORY,
     contract: "contracts/RigFactory.sol:RigFactory",
     constructorArguments: [],
   });
@@ -174,7 +172,7 @@ async function verifyRigFactory() {
 async function verifyAuctionFactory() {
   console.log("Starting AuctionFactory Verification");
   await hre.run("verify:verify", {
-    address: auctionFactory.address,
+    address: auctionFactory?.address || AUCTION_FACTORY,
     contract: "contracts/AuctionFactory.sol:AuctionFactory",
     constructorArguments: [],
   });
@@ -184,19 +182,18 @@ async function verifyAuctionFactory() {
 async function verifyCore() {
   console.log("Starting Core Verification");
   await hre.run("verify:verify", {
-    address: core.address,
+    address: core?.address || CORE,
     contract: "contracts/Core.sol:Core",
     constructorArguments: [
-      PROTOCOL_FEE_ADDRESS,
+      WETH_ADDRESS,
       DONUT_ADDRESS,
       UNISWAP_V2_FACTORY,
       UNISWAP_V2_ROUTER,
-      WETH_ADDRESS,
+      unitFactory?.address || UNIT_FACTORY,
+      rigFactory?.address || RIG_FACTORY,
+      auctionFactory?.address || AUCTION_FACTORY,
+      PROTOCOL_FEE_ADDRESS,
       MIN_DONUT_FOR_LAUNCH,
-      INITIAL_UNIT_MINT_AMOUNT,
-      unitFactory.address,
-      rigFactory.address,
-      auctionFactory.address,
     ],
   });
   console.log("Core Verified");
@@ -205,9 +202,9 @@ async function verifyCore() {
 async function verifyMulticall() {
   console.log("Starting Multicall Verification");
   await hre.run("verify:verify", {
-    address: multicall.address,
+    address: multicall?.address || MULTICALL,
     contract: "contracts/Multicall.sol:Multicall",
-    constructorArguments: [core.address, WETH_ADDRESS, DONUT_ADDRESS],
+    constructorArguments: [core?.address || CORE, WETH_ADDRESS, DONUT_ADDRESS],
   });
   console.log("Multicall Verified");
 }
@@ -228,13 +225,6 @@ async function setMinDonutForLaunch(amount) {
   const tx = await core.setMinDonutForLaunch(amount);
   await tx.wait();
   console.log("Min DONUT updated");
-}
-
-async function setInitialUnitMintAmount(amount) {
-  console.log("Setting Initial Unit Mint Amount to:", divDec(amount));
-  const tx = await core.setInitialUnitMintAmount(amount);
-  await tx.wait();
-  console.log("Initial Unit Mint Amount updated");
 }
 
 async function transferCoreOwnership(newOwner) {
@@ -258,7 +248,6 @@ async function printDeployment() {
   console.log("Uniswap V2 Router:   ", UNISWAP_V2_ROUTER);
   console.log("Protocol Fee Address:", PROTOCOL_FEE_ADDRESS || "NOT SET");
   console.log("Min DONUT for Launch:", divDec(MIN_DONUT_FOR_LAUNCH));
-  console.log("Initial Unit Mint:   ", divDec(INITIAL_UNIT_MINT_AMOUNT));
 
   console.log("\n--- Deployed Contracts ---");
   console.log(
@@ -288,10 +277,6 @@ async function printDeployment() {
       divDec(await core.minDonutForLaunch())
     );
     console.log(
-      "Initial Mint Amount: ",
-      divDec(await core.initialUnitMintAmount())
-    );
-    console.log(
       "Deployed Rigs:       ",
       (await core.deployedRigsLength()).toString()
     );
@@ -304,13 +289,9 @@ async function printCoreState() {
   console.log("\n--- Core State ---");
   console.log("Owner:               ", await core.owner());
   console.log("Protocol Fee Address:", await core.protocolFeeAddress());
-  console.log("DONUT:               ", await core.donutToken());
   console.log("WETH:                ", await core.weth());
+  console.log("DONUT:               ", await core.donutToken());
   console.log("Min DONUT:           ", divDec(await core.minDonutForLaunch()));
-  console.log(
-    "Initial Mint Amount: ",
-    divDec(await core.initialUnitMintAmount())
-  );
   console.log("Unit Factory:        ", await core.unitFactory());
   console.log("Rig Factory:         ", await core.rigFactory());
   console.log("Auction Factory:     ", await core.auctionFactory());
@@ -369,7 +350,6 @@ async function main() {
 
   // await setProtocolFeeAddress("0xNEW_ADDRESS");
   // await setMinDonutForLaunch(convert("500", 18));
-  // await setInitialUnitMintAmount(convert("2000000", 18));
 
   //===================================================================
   // 4. Transfer Ownership (optional)

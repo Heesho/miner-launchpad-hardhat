@@ -25,7 +25,6 @@ async function launchFreshRig(launcher, params = {}) {
   await ensureDonut(launcher, convert("20", 18));
   const defaultParams = {
     launcher: launcher.address,
-    quoteToken: weth.address,
     tokenName: "Test Unit",
     tokenSymbol: "TUNIT",
     uri: "",
@@ -115,14 +114,15 @@ describe("Business Logic Tests", function () {
     // Deploy Core
     const coreArtifact = await ethers.getContractFactory("Core");
     core = await coreArtifact.deploy(
-      protocol.address,
+      weth.address,
       donut.address,
       uniswapFactory.address,
       uniswapRouter.address,
-      convert("5", 18), // minDonutForLaunch (reduced for testing)
       unitFactory.address,
       rigFactory.address,
-      auctionFactory.address
+      auctionFactory.address,
+      protocol.address,
+      convert("5", 18) // minDonutForLaunch (reduced for testing)
     );
 
     // Deploy Multicall
@@ -895,7 +895,6 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
-          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
           uri: "",
@@ -921,7 +920,6 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
-          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
           uri: "",
@@ -947,7 +945,6 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
-          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
           uri: "",
@@ -973,7 +970,6 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
-          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
           uri: "",
@@ -999,7 +995,6 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
-          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "", // Invalid
           uri: "",
@@ -1182,7 +1177,6 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
-          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
           uri: "",
@@ -1208,7 +1202,6 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
-          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
           uri: "",
@@ -1234,7 +1227,6 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
-          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
           uri: "",
@@ -1260,7 +1252,6 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
-          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
           uri: "",
@@ -1291,7 +1282,6 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
-          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
           uri: "",
@@ -1317,7 +1307,6 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
-          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
           uri: "",
@@ -1343,7 +1332,6 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
-          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
           uri: "",
@@ -1369,7 +1357,6 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
-          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
           uri: "",
@@ -1395,7 +1382,6 @@ describe("Business Logic Tests", function () {
       await expect(
         core.connect(user1).launch({
           launcher: user1.address,
-          quoteToken: weth.address,
           tokenName: "Test",
           tokenSymbol: "TST",
           uri: "",
@@ -1421,7 +1407,6 @@ describe("Business Logic Tests", function () {
       // Should not revert with exact minimum values
       const tx = await core.connect(user1).launch({
         launcher: user1.address,
-        quoteToken: weth.address,
         tokenName: "Boundary Test",
         tokenSymbol: "BNDRY",
         uri: "",
@@ -1449,7 +1434,6 @@ describe("Business Logic Tests", function () {
       // Should not revert with exact maximum values
       const tx = await core.connect(user1).launch({
         launcher: user1.address,
-        quoteToken: weth.address,
         tokenName: "Max Boundary Test",
         tokenSymbol: "MAXB",
         uri: "",

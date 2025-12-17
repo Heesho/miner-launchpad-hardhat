@@ -68,14 +68,15 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
         // Deploy Core
         const Core = await ethers.getContractFactory("Core");
         core = await Core.deploy(
-            protocol.address,
+            weth.address,
             donut.address,
             uniswapFactory.address,
             uniswapRouter.address,
-            convert("100", 18),
             unitFactory.address,
             rigFactory.address,
-            auctionFactory.address
+            auctionFactory.address,
+            protocol.address,
+            convert("100", 18)
         );
 
         // Deploy Multicall
@@ -95,7 +96,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
         it("Can launch a rig through Multicall", async function () {
             const launchParams = {
                 launcher: AddressZero, // Will be overwritten by Multicall
-                quoteToken: weth.address,
                 tokenName: "Multicall Unit",
                 tokenSymbol: "MUNIT",
                 uri: "",
@@ -140,7 +140,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
         it("Launcher param is overwritten with msg.sender", async function () {
             const launchParams = {
                 launcher: user3.address, // Try to set someone else as launcher
-                quoteToken: weth.address,
                 tokenName: "Override Test",
                 tokenSymbol: "OVRD",
                 uri: "",
@@ -173,7 +172,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
         it("Reverts if DONUT not approved", async function () {
             const launchParams = {
                 launcher: AddressZero,
-                quoteToken: weth.address,
                 tokenName: "No Approve",
                 tokenSymbol: "NOAP",
                 uri: "",
@@ -200,7 +198,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
         it("Reverts with insufficient DONUT balance", async function () {
             const launchParams = {
                 launcher: AddressZero,
-                quoteToken: weth.address,
                 tokenName: "No Balance",
                 tokenSymbol: "NOBAL",
                 uri: "",
@@ -234,7 +231,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
             // Launch a fresh rig for mining tests
             const launchParams = {
                 launcher: AddressZero,
-                quoteToken: weth.address,
                 tokenName: "Mining Test Unit",
                 tokenSymbol: "MTEST",
                 uri: "",
@@ -430,7 +426,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
             // Launch a fresh rig
             const launchParams = {
                 launcher: AddressZero,
-                quoteToken: weth.address,
                 tokenName: "State Test Unit",
                 tokenSymbol: "STATE",
                 uri: "",
@@ -619,7 +614,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
             // Launch a fresh rig for each test
             const launchParams = {
                 launcher: AddressZero,
-                quoteToken: weth.address,
                 tokenName: "Buy Test Unit",
                 tokenSymbol: "BUYTEST",
                 uri: "",
@@ -755,7 +749,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
             // 1. Launch via Multicall
             const launchParams = {
                 launcher: AddressZero,
-                quoteToken: weth.address,
                 tokenName: "Lifecycle Test",
                 tokenSymbol: "LIFE",
                 uri: "",
@@ -847,7 +840,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
             // Launch rig
             const launchParams = {
                 launcher: AddressZero,
-                quoteToken: weth.address,
                 tokenName: "Multi User Test",
                 tokenSymbol: "MULTI",
                 uri: "",
@@ -907,7 +899,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
             // Launch rig
             const launchParams = {
                 launcher: AddressZero,
-                quoteToken: weth.address,
                 tokenName: "Frontend Sim",
                 tokenSymbol: "FRONT",
                 uri: "",
@@ -977,7 +968,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
         before(async function () {
             const launchParams = {
                 launcher: AddressZero,
-                quoteToken: weth.address,
                 tokenName: "Edge Case Test",
                 tokenSymbol: "EDGE",
                 uri: "",
@@ -1085,7 +1075,6 @@ describe("Multicall-Only Tests (Frontend Simulation)", function () {
         it("Launch gas cost", async function () {
             const launchParams = {
                 launcher: AddressZero,
-                quoteToken: weth.address,
                 tokenName: "Gas Test",
                 tokenSymbol: "GAS",
                 uri: "",

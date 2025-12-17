@@ -58,14 +58,15 @@ describe("Core Tests", function () {
     // Deploy Core
     const coreArtifact = await ethers.getContractFactory("Core");
     core = await coreArtifact.deploy(
-      protocol.address,
+      weth.address,
       donut.address,
       uniswapFactory.address,
       uniswapRouter.address,
-      convert("100", 18), // minDonutForLaunch
       unitFactory.address,
       rigFactory.address,
-      auctionFactory.address
+      auctionFactory.address,
+      protocol.address,
+      convert("100", 18) // minDonutForLaunch
     );
     console.log("- Core Initialized");
 
@@ -95,7 +96,6 @@ describe("Core Tests", function () {
 
     const launchParams = {
       launcher: user0.address,
-      quoteToken: weth.address,
       tokenName: "Test Unit",
       tokenSymbol: "TUNIT",
       uri: "",
@@ -327,7 +327,6 @@ describe("Core Tests", function () {
 
     const launchParams = {
       launcher: user0.address,
-      quoteToken: weth.address,
       tokenName: "Test Unit 2",
       tokenSymbol: "TUNIT2",
       uri: "",
@@ -359,7 +358,6 @@ describe("Core Tests", function () {
     // Test empty token name
     let launchParams = {
       launcher: user0.address,
-      quoteToken: weth.address,
       tokenName: "",
       tokenSymbol: "TUNIT2",
       uri: "",
