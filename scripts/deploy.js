@@ -21,11 +21,11 @@ const PROTOCOL_FEE_ADDRESS = "0x7a8C895E7826F66e1094532cB435Da725dc3868f"; // TO
 const MIN_DONUT_FOR_LAUNCH = convert("1", 18); // 1 DONUT minimum
 
 // Deployed Contract Addresses (paste after deployment)
-const UNIT_FACTORY = "0x4808e742A1aD8EdbB521e9b00f6bBa46298bC7b7";
-const RIG_FACTORY = "0xD42F69EC6A73cF855261c53b72230Abf6A1d438A";
-const AUCTION_FACTORY = "0xAB2E2B3845eF5c699C2c309512121c264E677dE7";
-const CORE = "0x93a563E603Ac501377c988ACC15AB540A97f88D3";
-const MULTICALL = "0xbA0963e38D317877057523fA63624AAFde47744C";
+const UNIT_FACTORY = "0x3F4Ec81270a6BFc4513EFd0cCb848587e86c25fe";
+const RIG_FACTORY = "0xADaDDeA4e36C54f65AaF299F553eD13B561F116a";
+const AUCTION_FACTORY = "0xd50Fd6c9DE9Be727c3C538372c076c1eab7C79d2";
+const CORE = "0xFFe2C14bF53fFf19b1FCE1d1095bE55b37ADE870";
+const MULTICALL = "0xFaC5F4d494ae9fEfc354e66B8b0835fbe0321085";
 
 // Contract Variables
 let unitFactory, rigFactory, auctionFactory, core, multicall;
@@ -333,7 +333,7 @@ async function main() {
   // 2. Verify Contracts
   //===================================================================
 
-  console.log("Starting Verification...");
+  // console.log("Starting Verification...");
   // await verifyUnitFactory();
   // await sleep(5000);
   // await verifyRigFactory();
@@ -361,7 +361,7 @@ async function main() {
   // Print Deployment
   //===================================================================
 
-  await printDeployment();
+  // await printDeployment();
 }
 
 main()
