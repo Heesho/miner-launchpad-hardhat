@@ -86,6 +86,7 @@ contract Core is Ownable, ReentrancyGuard {
     error Core__EmptyTokenName();
     error Core__EmptyTokenSymbol();
     error Core__InvalidUnitAmount();
+    error Core__ZeroAddress();
 
     /*----------  EVENTS  -----------------------------------------------*/
 
@@ -139,6 +140,14 @@ contract Core is Ownable, ReentrancyGuard {
         address _protocolFeeAddress,
         uint256 _minDonutForLaunch
     ) {
+        if (
+            _weth == address(0) || _donutToken == address(0) || _uniswapV2Factory == address(0)
+                || _uniswapV2Router == address(0) || _unitFactory == address(0) || _rigFactory == address(0)
+                || _auctionFactory == address(0)
+        ) {
+            revert Core__ZeroAddress();
+        }
+
         weth = _weth;
         donutToken = _donutToken;
         uniswapV2Factory = _uniswapV2Factory;

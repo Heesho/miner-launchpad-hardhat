@@ -21,6 +21,8 @@ interface IWETH {
 contract Multicall {
     using SafeERC20 for IERC20;
 
+    error Multicall__ZeroAddress();
+
     /*----------  IMMUTABLES  -------------------------------------------*/
 
     address public immutable core; // Core contract reference
@@ -75,6 +77,7 @@ contract Multicall {
      * @param _donut DONUT token address
      */
     constructor(address _core, address _weth, address _donut) {
+        if (_core == address(0) || _weth == address(0) || _donut == address(0)) revert Multicall__ZeroAddress();
         core = _core;
         weth = _weth;
         donut = _donut;

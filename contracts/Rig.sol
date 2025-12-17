@@ -72,7 +72,11 @@ contract Rig is Ownable, ReentrancyGuard {
     error Rig__Expired();
     error Rig__EpochIdMismatch();
     error Rig__MaxPriceExceeded();
+    error Rig__InvalidUnit();
+    error Rig__InvalidQuote();
     error Rig__InvalidTreasury();
+    error Rig__InvalidTeam();
+    error Rig__InvalidCore();
     error Rig__MinInitPriceBelowAbsoluteMin();
     error Rig__MinInitPriceAboveAbsoluteMax();
     error Rig__EpochPeriodOutOfRange();
@@ -126,7 +130,11 @@ contract Rig is Ownable, ReentrancyGuard {
         uint256 _priceMultiplier,
         uint256 _minInitPrice
     ) {
+        if (_unit == address(0)) revert Rig__InvalidUnit();
+        if (_quote == address(0)) revert Rig__InvalidQuote();
         if (_treasury == address(0)) revert Rig__InvalidTreasury();
+        if (_team == address(0)) revert Rig__InvalidTeam();
+        if (_core == address(0)) revert Rig__InvalidCore();
         if (_initialUps == 0) revert Rig__InvalidInitialUps();
         if (_initialUps > MAX_INITIAL_UPS) revert Rig__InitialUpsExceedsMax();
         if (_tailUps == 0 || _tailUps > _initialUps) revert Rig__InvalidTailUps();
