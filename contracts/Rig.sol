@@ -35,6 +35,8 @@ contract Rig is Ownable, ReentrancyGuard {
     uint256 public constant MAX_PRICE_MULTIPLIER = 3e18; // Should not exceed 300% of settlement price
     uint256 public constant ABS_MIN_INIT_PRICE = 1e6; // Minimum sane value for init price
     uint256 public constant ABS_MAX_INIT_PRICE = type(uint192).max; // chosen so that epochInitPrice * priceMultiplier does not exceed uint256
+    uint256 public constant MAX_INITIAL_UPS = 1e24; // 1 million tokens/second max to prevent overflow in minedAmount calculation
+    uint256 public constant MIN_HALVING_PERIOD = 1 days; // Minimum halving period to prevent degenerate tokenomics
 
     /*----------  IMMUTABLES  -------------------------------------------*/
 
@@ -76,8 +78,10 @@ contract Rig is Ownable, ReentrancyGuard {
     error Rig__EpochPeriodOutOfRange();
     error Rig__PriceMultiplierOutOfRange();
     error Rig__InvalidInitialUps();
+    error Rig__InitialUpsExceedsMax();
     error Rig__InvalidTailUps();
     error Rig__InvalidHalvingPeriod();
+    error Rig__HalvingPeriodBelowMin();
 
     /*----------  EVENTS  -----------------------------------------------*/
 
@@ -124,8 +128,10 @@ contract Rig is Ownable, ReentrancyGuard {
     ) {
         if (_treasury == address(0)) revert Rig__InvalidTreasury();
         if (_initialUps == 0) revert Rig__InvalidInitialUps();
+        if (_initialUps > MAX_INITIAL_UPS) revert Rig__InitialUpsExceedsMax();
         if (_tailUps == 0 || _tailUps > _initialUps) revert Rig__InvalidTailUps();
         if (_halvingPeriod == 0) revert Rig__InvalidHalvingPeriod();
+        if (_halvingPeriod < MIN_HALVING_PERIOD) revert Rig__HalvingPeriodBelowMin();
         if (_minInitPrice < ABS_MIN_INIT_PRICE) revert Rig__MinInitPriceBelowAbsoluteMin();
         if (_minInitPrice > ABS_MAX_INIT_PRICE) revert Rig__MinInitPriceAboveAbsoluteMax();
         if (_epochPeriod < MIN_EPOCH_PERIOD || _epochPeriod > MAX_EPOCH_PERIOD) revert Rig__EpochPeriodOutOfRange();

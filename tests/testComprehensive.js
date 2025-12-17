@@ -923,11 +923,11 @@ describe("Comprehensive Security Tests", function () {
         });
 
         it("FUZZ: Random halving periods", async function () {
-            // Test various halving periods
+            // Test various halving periods (all >= MIN_HALVING_PERIOD of 1 day)
             const periods = [
-                60,          // 1 minute
-                3600,        // 1 hour
-                86400,       // 1 day
+                86400,       // 1 day (MIN_HALVING_PERIOD)
+                172800,      // 2 days
+                604800,      // 7 days
                 2592000      // 30 days
             ];
 

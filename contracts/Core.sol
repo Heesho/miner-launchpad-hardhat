@@ -183,8 +183,10 @@ contract Core is Ownable, ReentrancyGuard {
         IUnit(unit).mint(address(this), params.unitAmount);
 
         // Create Unit/DONUT LP via Uniswap V2
-        IERC20(unit).approve(uniswapV2Router, params.unitAmount);
-        IERC20(donutToken).approve(uniswapV2Router, params.donutAmount);
+        IERC20(unit).safeApprove(uniswapV2Router, 0);
+        IERC20(unit).safeApprove(uniswapV2Router, params.unitAmount);
+        IERC20(donutToken).safeApprove(uniswapV2Router, 0);
+        IERC20(donutToken).safeApprove(uniswapV2Router, params.donutAmount);
 
         (,, uint256 liquidity) = IUniswapV2Router(uniswapV2Router).addLiquidity(
             unit,

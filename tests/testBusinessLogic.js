@@ -535,7 +535,7 @@ describe("Business Logic Tests", function () {
       const result = await launchFreshRig(user0, {
         initialUps: convert("8", 18),
         tailUps: convert("0.5", 18),
-        halvingPeriod: 100, // 100 seconds for testing
+        halvingPeriod: 86400, // 1 day (MIN_HALVING_PERIOD)
       });
       const rigContract = await ethers.getContractAt("Rig", result.rig);
 
@@ -544,25 +544,25 @@ describe("Business Logic Tests", function () {
       expect(ups).to.equal(convert("8", 18));
 
       // After 1 halving
-      await network.provider.send("evm_increaseTime", [100]);
+      await network.provider.send("evm_increaseTime", [86400]);
       await network.provider.send("evm_mine");
       ups = await rigContract.getUps();
       expect(ups).to.equal(convert("4", 18));
 
       // After 2 halvings
-      await network.provider.send("evm_increaseTime", [100]);
+      await network.provider.send("evm_increaseTime", [86400]);
       await network.provider.send("evm_mine");
       ups = await rigContract.getUps();
       expect(ups).to.equal(convert("2", 18));
 
       // After 3 halvings
-      await network.provider.send("evm_increaseTime", [100]);
+      await network.provider.send("evm_increaseTime", [86400]);
       await network.provider.send("evm_mine");
       ups = await rigContract.getUps();
       expect(ups).to.equal(convert("1", 18));
 
       // After 4 halvings
-      await network.provider.send("evm_increaseTime", [100]);
+      await network.provider.send("evm_increaseTime", [86400]);
       await network.provider.send("evm_mine");
       ups = await rigContract.getUps();
       expect(ups).to.equal(convert("0.5", 18)); // Reached tailUps
@@ -572,12 +572,12 @@ describe("Business Logic Tests", function () {
       const result = await launchFreshRig(user0, {
         initialUps: convert("4", 18),
         tailUps: convert("1", 18),
-        halvingPeriod: 100,
+        halvingPeriod: 86400, // 1 day (MIN_HALVING_PERIOD)
       });
       const rigContract = await ethers.getContractAt("Rig", result.rig);
 
-      // Fast forward many halving periods
-      await network.provider.send("evm_increaseTime", [10000]); // 100 halvings
+      // Fast forward many halving periods (100 days)
+      await network.provider.send("evm_increaseTime", [86400 * 100]);
       await network.provider.send("evm_mine");
 
       const ups = await rigContract.getUps();
@@ -588,12 +588,12 @@ describe("Business Logic Tests", function () {
       const result = await launchFreshRig(user0, {
         initialUps: convert("8", 18),
         tailUps: convert("0.5", 18),
-        halvingPeriod: 100,
+        halvingPeriod: 86400, // 1 day (MIN_HALVING_PERIOD)
       });
       const rigContract = await ethers.getContractAt("Rig", result.rig);
 
-      // Forward 50 seconds (half a period)
-      await network.provider.send("evm_increaseTime", [50]);
+      // Forward 12 hours (half a period)
+      await network.provider.send("evm_increaseTime", [43200]);
       await network.provider.send("evm_mine");
 
       const ups = await rigContract.getUps();
@@ -604,7 +604,7 @@ describe("Business Logic Tests", function () {
       const result = await launchFreshRig(user0, {
         initialUps: convert("100", 18),
         tailUps: convert("10", 18),
-        halvingPeriod: 100,
+        halvingPeriod: 86400, // 1 day (MIN_HALVING_PERIOD)
       });
       const rigContract = await ethers.getContractAt("Rig", result.rig);
       const unitContract = await ethers.getContractAt("Unit", await rigContract.unit());

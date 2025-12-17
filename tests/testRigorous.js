@@ -257,12 +257,12 @@ describe("Rigorous Tests", function () {
       const result = await launchFreshRig(user0, {
         initialUps: convert("8", 18),
         tailUps: convert("1", 18),
-        halvingPeriod: 100,
+        halvingPeriod: 86400, // 1 day (MIN_HALVING_PERIOD)
       });
       const rigContract = await ethers.getContractAt("Rig", result.rig);
 
       // Check UPS at exactly halving boundary
-      await network.provider.send("evm_increaseTime", [100]);
+      await network.provider.send("evm_increaseTime", [86400]);
       await network.provider.send("evm_mine");
 
       const ups = await rigContract.getUps();
@@ -446,7 +446,7 @@ describe("Rigorous Tests", function () {
       const result = await launchFreshRig(user0, {
         initialUps: convert("100", 18),
         tailUps: convert("10", 18),
-        halvingPeriod: 600,
+        halvingPeriod: 86400, // 1 day (MIN_HALVING_PERIOD)
         rigEpochPeriod: 600,
       });
 
@@ -474,8 +474,8 @@ describe("Rigorous Tests", function () {
 
       expect(user1BalanceAfter).to.be.gt(user1BalanceBefore);
 
-      // Trigger halving
-      await network.provider.send("evm_increaseTime", [600]);
+      // Trigger halving (1 day)
+      await network.provider.send("evm_increaseTime", [86400]);
       await network.provider.send("evm_mine");
 
       expect(await rigContract.getUps()).to.equal(convert("50", 18));
