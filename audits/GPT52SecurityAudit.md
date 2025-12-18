@@ -1,6 +1,7 @@
 # Miner Launchpad Smart Contract Security Audit (GPT-5.2)
 
 **Audit date:** 2025-12-18  
+**Commit:** `d40f16b`  
 **Solidity version:** `0.8.19`  
 
 **In-scope:** `contracts/Core.sol`, `contracts/Rig.sol`, `contracts/Auction.sol`, `contracts/Unit.sol`, `contracts/Multicall.sol`, `contracts/*Factory.sol`, `contracts/interfaces/*.sol`  
@@ -32,15 +33,16 @@ No Foundry PoC exploits are provided because no critical/high issues were found.
 
 - **Severity:** Low  
   **Title:** Effects-after-interactions pattern in `Rig.mine()` and `Auction.buy()` relies on `nonReentrant`  
-  **Description:** Both functions perform external token interactions (multiple `transferFrom` / `transfer`) before updating epoch state. While `ReentrancyGuard` is present and materially reduces practical risk, the contracts’ safety relies on that guard continuing to exist and being correctly applied. This is a common CEI best-practice concern: if the guard is removed/refactored in the future, or if a non-standard token introduces unexpected control flow, the blast radius increases.  
+  **Description:** Both functions perform external token interactions (`transferFrom` / `transfer`) before updating epoch state. While `ReentrancyGuard` is present and materially reduces practical risk, the contracts’ safety relies on that guard continuing to exist and being correctly applied. This is a common CEI best-practice concern: if the guard is removed/refactored in the future, or if a non-standard token introduces unexpected control flow, the blast radius increases.  
   **Code Snippet:**
   ```solidity
   // contracts/Rig.sol
   // external calls occur before epoch state is updated
-  IERC20(quote).safeTransferFrom(msg.sender, epochMiner, previousMinerAmount);
-  IERC20(quote).safeTransferFrom(msg.sender, treasury, treasuryAmount);
-  IERC20(quote).safeTransferFrom(msg.sender, team, teamAmount);
-  IERC20(quote).safeTransferFrom(msg.sender, protocolFeeAddr, protocolAmount);
+  IERC20(quote).safeTransferFrom(msg.sender, address(this), price);
+  IERC20(quote).safeTransfer(epochMiner, previousMinerAmount);
+  IERC20(quote).safeTransfer(treasury, treasuryAmount);
+  IERC20(quote).safeTransfer(team, teamAmount);
+  IERC20(quote).safeTransfer(protocolFeeAddr, protocolAmount);
 
   // Update state for new epoch
   epochId++;
@@ -55,7 +57,7 @@ No Foundry PoC exploits are provided because no critical/high issues were found.
   // Update state for new epoch
   epochId++;
   ```
-  **Recommendation:** Keep `nonReentrant` on these entrypoints. For defense-in-depth, refactor toward CEI: pull payment into the contract once, update epoch state, then distribute (or accrue and let recipients withdraw).
+  **Recommendation:** Keep `nonReentrant` on these entrypoints. For defense-in-depth, refactor further toward CEI: update epoch state before distributions, or accrue balances and let recipients withdraw.
 
 - **Severity:** Informational  
   **Title:** Dutch auctions decay to `0`, enabling free `mine()` / free `buy()` after epoch expiry  
@@ -171,19 +173,6 @@ No Foundry PoC exploits are provided because no critical/high issues were found.
   ```
   **Recommendation:** Consider a max length, or store hashes/content-addresses (`bytes32`) instead of full strings.
 
-- **Severity:** Informational  
-  **Title:** Gas: `Rig.mine()` performs multiple `transferFrom` calls (can be reduced)  
-  **Description:** Up to four `safeTransferFrom` calls are executed per mine, each touching allowance/balance state. This is safe under the WETH assumption but higher gas than necessary.  
-  **Code Snippet:**
-  ```solidity
-  // contracts/Rig.sol
-  IERC20(quote).safeTransferFrom(msg.sender, epochMiner, previousMinerAmount);
-  IERC20(quote).safeTransferFrom(msg.sender, treasury, treasuryAmount);
-  IERC20(quote).safeTransferFrom(msg.sender, team, teamAmount);
-  IERC20(quote).safeTransferFrom(msg.sender, protocolFeeAddr, protocolAmount);
-  ```
-  **Recommendation:** Pull `price` once into the Rig, then `safeTransfer` out to recipients. This also makes CEI refactors easier.
-
 ---
 
 ## Conclusion
@@ -191,4 +180,3 @@ No Foundry PoC exploits are provided because no critical/high issues were found.
 The contracts exhibit good security hygiene (checked arithmetic, `ReentrancyGuard`, explicit access control, parameter bounds, and a clear separation of concerns). I found **no Critical/High** vulnerabilities in the on-chain logic under stated dependency assumptions.
 
 **Overall security rating:** **Low risk / strong**, with the main remaining issues being design/operational risks (price→0 behavior, auction asset sweep semantics, and privileged fee-routing controls) plus a handful of best-practice and gas optimizations.
-
