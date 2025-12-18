@@ -17,8 +17,9 @@ const UNISWAP_V2_FACTORY = "0x8909Dc15e40173Ff4699343b6eB8132c65e18eC6";
 const UNISWAP_V2_ROUTER = "0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24";
 
 // Protocol settings
-const PROTOCOL_FEE_ADDRESS = "0x7a8C895E7826F66e1094532cB435Da725dc3868f"; // TODO: Set protocol fee recipient
-const MIN_DONUT_FOR_LAUNCH = convert("1", 18); // 1 DONUT minimum
+const PROTOCOL_FEE_ADDRESS = "0xbA366c82815983fF130C23CED78bD95E1F2c18EA"; // TODO: Set protocol fee recipient
+const MULTISIG_ADDRESS = "0xeE0CB49D2805DA6bC0A979ddAd87bb793fbB765E";
+const MIN_DONUT_FOR_LAUNCH = convert("10", 18); // 10 DONUT minimum
 
 // Deployed Contract Addresses (paste after deployment)
 const UNIT_FACTORY = "0x3F4Ec81270a6BFc4513EFd0cCb848587e86c25fe";
@@ -348,20 +349,24 @@ async function main() {
   // 3. Configuration (optional)
   //===================================================================
 
-  // await setProtocolFeeAddress("0xNEW_ADDRESS");
-  // await setMinDonutForLaunch(convert("500", 18));
+  // await setProtocolFeeAddress(PROTOCOL_FEE_ADDRESS);
+  // console.log("Protocol Fee Address updated");
+
+  // await setMinDonutForLaunch(MIN_DONUT_FOR_LAUNCH);
+  // console.log("Min DONUT for Launch updated");
 
   //===================================================================
   // 4. Transfer Ownership (optional)
   //===================================================================
 
-  // await transferCoreOwnership("0xMULTISIG_ADDRESS");
+  // await transferCoreOwnership(MULTISIG_ADDRESS);
+  // console.log("Core ownership transferred to:", MULTISIG_ADDRESS);
 
   //===================================================================
   // Print Deployment
   //===================================================================
 
-  // await printDeployment();
+  await printDeployment();
 }
 
 main()
