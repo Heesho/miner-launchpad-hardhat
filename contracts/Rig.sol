@@ -203,23 +203,26 @@ contract Rig is Ownable, ReentrancyGuard {
             uint256 protocolAmount = protocolFeeAddr != address(0) ? price * PROTOCOL_FEE / DIVISOR : 0;
             uint256 treasuryAmount = price - previousMinerAmount - teamAmount - protocolAmount;
 
+            // Pull payment once, then distribute
+            IERC20(quote).safeTransferFrom(msg.sender, address(this), price);
+
             // Previous miner always gets paid
-            IERC20(quote).safeTransferFrom(msg.sender, epochMiner, previousMinerAmount);
+            IERC20(quote).safeTransfer(epochMiner, previousMinerAmount);
             emit Rig__PreviousMinerFee(epochMiner, previousMinerAmount);
 
             // Treasury gets base fee + any unclaimed team/protocol fees
-            IERC20(quote).safeTransferFrom(msg.sender, treasury, treasuryAmount);
+            IERC20(quote).safeTransfer(treasury, treasuryAmount);
             emit Rig__TreasuryFee(treasury, treasuryAmount);
 
             // Team fee only if team address is set
             if (teamAmount > 0) {
-                IERC20(quote).safeTransferFrom(msg.sender, team, teamAmount);
+                IERC20(quote).safeTransfer(team, teamAmount);
                 emit Rig__TeamFee(team, teamAmount);
             }
 
             // Protocol fee only if protocol address is set
             if (protocolAmount > 0) {
-                IERC20(quote).safeTransferFrom(msg.sender, protocolFeeAddr, protocolAmount);
+                IERC20(quote).safeTransfer(protocolFeeAddr, protocolAmount);
                 emit Rig__ProtocolFee(protocolFeeAddr, protocolAmount);
             }
         }

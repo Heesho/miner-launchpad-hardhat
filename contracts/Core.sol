@@ -205,7 +205,7 @@ contract Core is Ownable, ReentrancyGuard {
             params.unitAmount,
             params.donutAmount,
             address(this),
-            block.timestamp + 1
+            block.timestamp + 20 minutes
         );
 
         // Get LP token address and burn initial liquidity
