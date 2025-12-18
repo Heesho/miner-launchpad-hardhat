@@ -503,7 +503,7 @@ async function main() {
   // await verifyMulticall();
 
   // Get Unit verification info for manual verification
-  await getUnitVerificationInfo(0);
+  // await getUnitVerificationInfo(0);
 
   // await verifyUnitByRigIndex(0);
   // await sleep(5000);
