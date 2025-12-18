@@ -19,14 +19,14 @@ const UNISWAP_V2_ROUTER = "0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24";
 // Protocol settings
 const PROTOCOL_FEE_ADDRESS = "0xbA366c82815983fF130C23CED78bD95E1F2c18EA"; // TODO: Set protocol fee recipient
 const MULTISIG_ADDRESS = "0xeE0CB49D2805DA6bC0A979ddAd87bb793fbB765E";
-const MIN_DONUT_FOR_LAUNCH = convert("10", 18); // 10 DONUT minimum
+const MIN_DONUT_FOR_LAUNCH = convert("1000", 18); // 1000 DONUT minimum
 
 // Deployed Contract Addresses (paste after deployment)
-const UNIT_FACTORY = "0xff99507A8e9f1D7c98A201ae86ec8d6b24A5a2bF";
-const RIG_FACTORY = "0xD8ee3D1508299369921A7c8424165bc7F1F1823a";
-const AUCTION_FACTORY = "0xf5346227118473565a07AAF55367B39131130923";
-const CORE = "0x158Fdaf6b540DFC477448848cB0C28D9bcc7914C";
-const MULTICALL = "0x796bc75fb33AaDe7D8FB7cfB1BF3C73B28e4F0B4";
+const UNIT_FACTORY = "0x06AA36dFBbC3cd08A909fD87d1720DFd648258d7";
+const RIG_FACTORY = "0xd282e019297Ae66c7b55230294598aa67e27287D";
+const AUCTION_FACTORY = "0x8E91fd0Af59E87D4C32cAfd24ba0294f6AE2c192";
+const CORE = "0x7e224d1912D132Cfb82dc44565A424913ac764aC";
+const MULTICALL = "0x163E732263E65C5fACdfa136e91E07b219Bb391E";
 
 // Contract Variables
 let unitFactory, rigFactory, auctionFactory, core, multicall;
@@ -210,6 +210,163 @@ async function verifyMulticall() {
   console.log("Multicall Verified");
 }
 
+async function verifyUnitByRigIndex(rigIndex) {
+  const rigAddress = await core.deployedRigs(rigIndex);
+  const unitAddress = await core.rigToUnit(rigAddress);
+  const unit = await ethers.getContractAt(
+    "contracts/Unit.sol:Unit",
+    unitAddress
+  );
+
+  const name = await unit.name();
+  const symbol = await unit.symbol();
+
+  console.log("Starting Unit Verification for:", unitAddress);
+  console.log("  Name:", name);
+  console.log("  Symbol:", symbol);
+
+  await hre.run("verify:verify", {
+    address: unitAddress,
+    contract: "contracts/Unit.sol:Unit",
+    constructorArguments: [name, symbol],
+  });
+  console.log("Unit Verified:", unitAddress);
+}
+
+async function getUnitVerificationInfo(rigIndex) {
+  const rigAddress = await core.deployedRigs(rigIndex);
+  const unitAddress = await core.rigToUnit(rigAddress);
+  const unit = await ethers.getContractAt(
+    "contracts/Unit.sol:Unit",
+    unitAddress
+  );
+
+  const name = await unit.name();
+  const symbol = await unit.symbol();
+
+  // ABI encode the constructor arguments
+  const abiCoder = new ethers.utils.AbiCoder();
+  const encodedArgs = abiCoder.encode(["string", "string"], [name, symbol]);
+  // Remove '0x' prefix for BaseScan
+  const encodedArgsNoPrefix = encodedArgs.slice(2);
+
+  console.log("\n=== Unit Verification Info ===\n");
+  console.log("Unit Address:", unitAddress);
+  console.log("Name:", name);
+  console.log("Symbol:", symbol);
+  console.log("\nABI-Encoded Constructor Arguments (for BaseScan):");
+  console.log(encodedArgsNoPrefix);
+  console.log("\n==============================\n");
+
+  return { unitAddress, name, symbol, encodedArgs: encodedArgsNoPrefix };
+}
+
+async function verifyRigByIndex(rigIndex) {
+  const rigAddress = await core.deployedRigs(rigIndex);
+  const rig = await ethers.getContractAt("contracts/Rig.sol:Rig", rigAddress);
+
+  // Read all constructor args from the deployed contract
+  const unitAddress = await rig.unit();
+  const quoteAddress = await rig.quote();
+  const treasury = await rig.treasury();
+  const team = await rig.team();
+  const coreAddress = await rig.core();
+  const uri = await rig.uri();
+  const initialUps = await rig.initialUps();
+  const tailUps = await rig.tailUps();
+  const halvingPeriod = await rig.halvingPeriod();
+  const epochPeriod = await rig.epochPeriod();
+  const priceMultiplier = await rig.priceMultiplier();
+  const minInitPrice = await rig.minInitPrice();
+
+  console.log("Starting Rig Verification for:", rigAddress);
+  console.log("  Unit:", unitAddress);
+  console.log("  Quote:", quoteAddress);
+  console.log("  Treasury:", treasury);
+  console.log("  Team:", team);
+  console.log("  Core:", coreAddress);
+  console.log("  URI:", uri);
+  console.log("  Initial UPS:", initialUps.toString());
+  console.log("  Tail UPS:", tailUps.toString());
+  console.log("  Halving Period:", halvingPeriod.toString());
+  console.log("  Epoch Period:", epochPeriod.toString());
+  console.log("  Price Multiplier:", priceMultiplier.toString());
+  console.log("  Min Init Price:", minInitPrice.toString());
+
+  await hre.run("verify:verify", {
+    address: rigAddress,
+    contract: "contracts/Rig.sol:Rig",
+    constructorArguments: [
+      unitAddress,
+      quoteAddress,
+      treasury,
+      team,
+      coreAddress,
+      uri,
+      initialUps,
+      tailUps,
+      halvingPeriod,
+      epochPeriod,
+      priceMultiplier,
+      minInitPrice,
+    ],
+  });
+  console.log("Rig Verified:", rigAddress);
+}
+
+async function verifyAuctionByRigIndex(rigIndex) {
+  const rigAddress = await core.deployedRigs(rigIndex);
+  const auctionAddress = await core.rigToAuction(rigAddress);
+  const auction = await ethers.getContractAt(
+    "contracts/Auction.sol:Auction",
+    auctionAddress
+  );
+
+  // Read constructor args from the deployed contract
+  const paymentToken = await auction.paymentToken();
+  const paymentReceiver = await auction.paymentReceiver();
+  const epochPeriod = await auction.epochPeriod();
+  const priceMultiplier = await auction.priceMultiplier();
+  const minInitPrice = await auction.minInitPrice();
+
+  // Read current initPrice - this equals the constructor arg if epochId is still 0
+  // If someone has already bought, you may need to pass the original initPrice manually
+  const epochId = await auction.epochId();
+  const currentInitPrice = await auction.initPrice();
+  const initPrice = epochId.eq(0) ? currentInitPrice : minInitPrice;
+
+  if (!epochId.eq(0)) {
+    console.log(
+      "  WARNING: Auction has been used (epochId > 0). Using minInitPrice as initPrice."
+    );
+    console.log(
+      "  If verification fails, you may need to find the original auctionInitPrice from launch event."
+    );
+  }
+
+  console.log("Starting Auction Verification for:", auctionAddress);
+  console.log("  Init Price:", initPrice.toString());
+  console.log("  Payment Token:", paymentToken);
+  console.log("  Payment Receiver:", paymentReceiver);
+  console.log("  Epoch Period:", epochPeriod.toString());
+  console.log("  Price Multiplier:", priceMultiplier.toString());
+  console.log("  Min Init Price:", minInitPrice.toString());
+
+  await hre.run("verify:verify", {
+    address: auctionAddress,
+    contract: "contracts/Auction.sol:Auction",
+    constructorArguments: [
+      initPrice,
+      paymentToken,
+      paymentReceiver,
+      epochPeriod,
+      priceMultiplier,
+      minInitPrice,
+    ],
+  });
+  console.log("Auction Verified:", auctionAddress);
+}
+
 // =============================================================================
 // CONFIGURATION FUNCTIONS
 // =============================================================================
@@ -344,6 +501,16 @@ async function main() {
   // await verifyCore();
   // await sleep(5000);
   // await verifyMulticall();
+
+  // Get Unit verification info for manual verification
+  // await getUnitVerificationInfo(0);
+
+  // await verifyUnitByRigIndex(0);
+  // await sleep(5000);
+  // await verifyRigByIndex(0);
+  // await sleep(5000);
+  // await verifyAuctionByRigIndex(0);
+  // await sleep(5000);
 
   //===================================================================
   // 3. Configuration (optional)
