@@ -366,7 +366,7 @@ async function main() {
   // Print Deployment
   //===================================================================
 
-  await printDeployment();
+  // await printDeployment();
 }
 
 main()

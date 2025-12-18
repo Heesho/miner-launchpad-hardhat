@@ -94,7 +94,7 @@ contract Multicall {
      * @param maxPrice Maximum price willing to pay
      * @param epochUri Metadata URI for this mining action
      */
-    function mine(address rig, uint256 epochId, uint256 deadline, uint256 maxPrice, string memory epochUri)
+    function mine(address rig, uint256 epochId, uint256 deadline, uint256 maxPrice, string calldata epochUri)
         external
         payable
     {

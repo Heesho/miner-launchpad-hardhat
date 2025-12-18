@@ -17,7 +17,7 @@ contract UnitFactory {
      * @param _tokenSymbol Symbol for the Unit token
      * @return Address of the newly deployed Unit token
      */
-    function deploy(string memory _tokenName, string memory _tokenSymbol) external returns (address) {
+    function deploy(string calldata _tokenName, string calldata _tokenSymbol) external returns (address) {
         Unit unit = new Unit(_tokenName, _tokenSymbol);
         unit.setRig(msg.sender);
         return address(unit);

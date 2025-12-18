@@ -181,7 +181,7 @@ contract Rig is Ownable, ReentrancyGuard {
      * @param _epochUri Metadata URI for this mining action
      * @return price Actual price paid
      */
-    function mine(address miner, uint256 _epochId, uint256 deadline, uint256 maxPrice, string memory _epochUri)
+    function mine(address miner, uint256 _epochId, uint256 deadline, uint256 maxPrice, string calldata _epochUri)
         external
         nonReentrant
         returns (uint256 price)
@@ -281,7 +281,7 @@ contract Rig is Ownable, ReentrancyGuard {
      * @dev Used to set metadata like the unit logo image.
      * @param _uri New metadata URI
      */
-    function setUri(string memory _uri) external onlyOwner {
+    function setUri(string calldata _uri) external onlyOwner {
         uri = _uri;
         emit Rig__UriSet(_uri);
     }

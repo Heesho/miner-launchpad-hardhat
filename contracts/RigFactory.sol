@@ -32,7 +32,7 @@ contract RigFactory {
         address _treasury,
         address _team,
         address _core,
-        string memory _uri,
+        string calldata _uri,
         uint256 _initialUps,
         uint256 _tailUps,
         uint256 _halvingPeriod,

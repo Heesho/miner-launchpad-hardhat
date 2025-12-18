@@ -7,7 +7,7 @@ pragma solidity 0.8.19;
  * @notice Interface for the Rig contract.
  */
 interface IRig {
-    function mine(address miner, uint256 _epochId, uint256 deadline, uint256 maxPrice, string memory _epochUri)
+    function mine(address miner, uint256 _epochId, uint256 deadline, uint256 maxPrice, string calldata _epochUri)
         external
         returns (uint256 price);
     function transferOwnership(address newOwner) external;
