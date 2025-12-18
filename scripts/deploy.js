@@ -22,11 +22,11 @@ const MULTISIG_ADDRESS = "0xeE0CB49D2805DA6bC0A979ddAd87bb793fbB765E";
 const MIN_DONUT_FOR_LAUNCH = convert("10", 18); // 10 DONUT minimum
 
 // Deployed Contract Addresses (paste after deployment)
-const UNIT_FACTORY = "0x3F4Ec81270a6BFc4513EFd0cCb848587e86c25fe";
-const RIG_FACTORY = "0xADaDDeA4e36C54f65AaF299F553eD13B561F116a";
-const AUCTION_FACTORY = "0xd50Fd6c9DE9Be727c3C538372c076c1eab7C79d2";
-const CORE = "0xFFe2C14bF53fFf19b1FCE1d1095bE55b37ADE870";
-const MULTICALL = "0xFaC5F4d494ae9fEfc354e66B8b0835fbe0321085";
+const UNIT_FACTORY = "0xff99507A8e9f1D7c98A201ae86ec8d6b24A5a2bF";
+const RIG_FACTORY = "0xD8ee3D1508299369921A7c8424165bc7F1F1823a";
+const AUCTION_FACTORY = "0xf5346227118473565a07AAF55367B39131130923";
+const CORE = "0x158Fdaf6b540DFC477448848cB0C28D9bcc7914C";
+const MULTICALL = "0x796bc75fb33AaDe7D8FB7cfB1BF3C73B28e4F0B4";
 
 // Contract Variables
 let unitFactory, rigFactory, auctionFactory, core, multicall;
@@ -366,7 +366,7 @@ async function main() {
   // Print Deployment
   //===================================================================
 
-  // await printDeployment();
+  await printDeployment();
 }
 
 main()
